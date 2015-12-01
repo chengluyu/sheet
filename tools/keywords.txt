@@ -1,0 +1,21 @@
+(\w+),\s*(.+)
+	public static final Keyword $1 = new Keyword(Tag.$1, "$2");
+CLASS, class
+IF, if
+ELSE, else
+FOR, for
+WHILE, while
+DO, do
+MOUDULE, moudule
+IMPORT, import
+EXPORT, export
+AS, as
+BYTE, byte
+SHORT, short
+INT, int
+LONG, long
+UNSIGNED, unsigned
+FLOAT, float
+DOUBLE, double
+BOOL, bool
+CHAR, char

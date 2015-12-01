@@ -66,34 +66,69 @@ export {
 
 #### 类型别名
 
-类型别名为一个类型给予一个新的名字：
+类型别名为一个类型赋予一个新的名字：
 
 ```
 type MyInt = int
 type Point = (int, int)
-type PointF = (float, float)
+type Vector3D = (int, int, int)
 ```
+
+新类型与原有类型之间可以实现隐式转换。
 
 #### 枚举类型声明
 
 枚举类型分为无类型枚举和有类型枚举。
 
-有类型枚举定义了一组相同类型的常量集合，枚举类型的
+有类型枚举定义了一组相同类型的常量集合。
 
 ```
-enum Color of int {
-	Red, Blue, Green
+enum Direction of int {
+	Up = 0,
+	Down = 1,
+	Left = 2,
+	Right = 3
 }
-enum Color of int {
-	Red, Blue, Green
+enum Color of String {
+	Red = "red",
+	Blue = "blue",
+	Green = "green"
 }
 ```
 
-无类型枚举因为没有变量
+无类型枚举定义了一组符号的集合。
+
+```
+enum Token {
+	EOF, Number, Operator
+}
+```
+
+访问枚举类型的值与访问对象成员的方式一样：
+
+```
+Direction.Up
+Color.Green
+Token.EOF
+```
+
+#### 类类型声明
+
+```
+class TreeNode {
+	public TreeNode(int v') {
+		lc = rc = null
+		v = v'
+	}
+	
+	private int v
+	private TreeNode lc, rc
+}
+```
 
 ### 变量和常量声明
 
 ### 关键词列表
 
 1. 模块：`module`、`import`、`export`、`as`和`from`
-2. 类型声明：`type`、`enum`
+2. 类型声明：`type`、`enum`、`of`、`class`、`public`、`private`、`protected`、

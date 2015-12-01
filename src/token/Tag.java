@@ -8,5 +8,19 @@ public enum Tag {
 	ILLEGAL,
 	
 	// Identifier
-	IDENTIFIER
+	IDENTIFIER,
+	
+	// Reserved words
+	AS,
+	CLASS,
+	ENUM,
+	EXPORT,
+	FROM,
+	IMPORT,
+	MODULE,
+	OF,
+	PRIVATE,
+	PROTECTED,
+	PUBLIC,
+	TYPE
 }

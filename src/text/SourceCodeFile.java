@@ -1,24 +1,36 @@
 package text;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
 public class SourceCodeFile extends SourceCode {
 	
-	public SourceCodeFile(String path) throws FileNotFoundException {
-		srcFile_ = new File(path);
-		reader_ = new FileReader(srcFile_);
+	public SourceCodeFile(String filePath) {
+		try {
+			reader_ = new FileReader(filePath);
+		} catch (FileNotFoundException e) {
+			eof_ = true;
+		}
 	}	
 	
-	private File srcFile_;
 	private FileReader reader_;
 	private boolean eof_ = false;
 	
 	@Override
 	public char advance() {
-		return 0;
+		if (eof_)
+			return (char) -1;
+		
+		int read = -1;
+		
+		try {
+			read = reader_.read();
+		} catch (IOException e) {
+			eof_ = true;
+		}
+		
+		return (char) read;
 	}
 	
 	

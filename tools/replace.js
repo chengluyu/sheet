@@ -7,7 +7,7 @@ if (process.argv.length != 4) {
   process.exit(0);
 }
 
-let lines = fs.readFileSync(process.argv[2], "utf8");
+let lines = fs.readFileSync(process.argv[2], "utf8").split('\n');
 
 if (lines.length <= 2) {
   console.log("Too few lines.");
