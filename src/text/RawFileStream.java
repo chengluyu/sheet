@@ -4,38 +4,32 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class SourceCodeFile extends SourceCode {
+public class RawFileStream extends RawStream {
 	
-	public SourceCodeFile(String filePath) {
+	public RawFileStream(String filePath) {
 		try {
 			reader_ = new FileReader(filePath);
 		} catch (FileNotFoundException e) {
-			eof_ = true;
+			error_ = true;
 		}
 	}	
 	
 	private FileReader reader_;
-	private boolean eof_ = false;
+	private boolean error_ = false;
 	
 	@Override
 	public char advance() {
-		if (eof_)
-			return (char) -1;
+		if (error_)
+			return RawStream.EOF;
 		
-		int read = -1;
+		int read = RawStream.EOF;
 		
 		try {
 			read = reader_.read();
 		} catch (IOException e) {
-			eof_ = true;
+			error_ = true;
 		}
 		
 		return (char) read;
-	}
-	
-	
-	@Override
-	public boolean eof() {
-		return eof_;
 	}
 }

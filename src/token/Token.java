@@ -2,7 +2,7 @@ package token;
 
 public class Token {
 	
-	public Token(Tag tag, String literal) {
+	protected Token(Tag tag, String literal) {
 		tag_ = tag;
 		literal_ = literal;
 	}
@@ -24,5 +24,6 @@ public class Token {
 	private final String literal_;
 	
 	public static final Token EOS = new Token(Tag.EOS, "end of source");
+	public static final Token WHITESPACE = new Token(Tag.WHITESPACE, "whitespace");
 	
 }

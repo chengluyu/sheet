@@ -2,7 +2,7 @@ package token;
 
 public class Illegal extends Token {
 
-	public Illegal(Tag tag, String description) {
+	public Illegal(String description) {
 		super(Tag.ILLEGAL, "illegal token");
 		description_ = description;
 	}

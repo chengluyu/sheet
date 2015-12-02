@@ -4,7 +4,7 @@ A tidy and concise programming language and its implementation in Java.
 
 ## Language Reference
 
-See REFERENCE.md for more info (in Chinese).
+See /docs for more info (in Chinese).
 
 ## License
 

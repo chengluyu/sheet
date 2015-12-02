@@ -2,9 +2,9 @@ package text;
 
 public class Scanner {
 	
-	public Scanner(SourceCode src) {
-		src_ = src;
-		peek_ = src_.advance();
+	public Scanner(RawStream stream) {
+		stream_ = stream;
+		advance();
 	}
 	
 	public boolean end() {
@@ -20,14 +20,16 @@ public class Scanner {
 	 * @return
 	 */
 	public char next() {
-		if ()
+		char c = peek_;
+		advance();
+		return c;
 	}
 	
 	/**
 	 * Simply ignores the next character.
 	 */
 	public void ignore() {
-		peek_ = src_.advance();
+		advance();
 	}
 	
 	/**
@@ -37,25 +39,26 @@ public class Scanner {
 	 */
 	public boolean match(char ch) {
 		if (peek_ == ch) {
-			ignore();
+			advance();
 			return true;
 		}
 		return false;
 	}
 	
-	public int ignore(int v) {
-		return v;
-	}
-	
+	/**
+	 * Extract next character and set end flag if the stream meets an EOF.
+	 */
 	private void advance() {
-		if (src_.eof()) {
-			end_ = true;
+		if (!end_) {
+			peek_ = stream_.advance();
+			if (peek_ == RawStream.EOF)
+				end_ = true;
 		}
 	}
 	
 	private boolean end_;
 	private char peek_;
-	private SourceCode src_;
+	private RawStream stream_;
 	
-	private static final char EOF = (char) -1;
+	public static final char EOF = RawStream.EOF;
 }

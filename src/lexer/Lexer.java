@@ -1,7 +1,5 @@
 package lexer;
 
-import java.util.ArrayDeque;
-
 import text.Scanner;
 import token.*;
 
@@ -12,15 +10,100 @@ public class Lexer {
 	}
 	
 	private Scanner scan_;
+	private int line_, column_;
+	private boolean eos_;
 	
 	private void scan() {
+		if (eos_) return;
+		
 		Token token = null;
 		
-		skipWhiteSpace();
-		
-		switch (scan_.peek()) {
-		
-		}
+		do {
+			switch (scan_.peek()) {
+			
+			// End of source
+			case Scanner.EOF:
+				token = Token.EOS;
+				eos_ = true;
+				break;
+				
+			// Single-character punctuators
+			case '(':
+				token = Punctuator.LPAREN;
+				break;
+			case ')':
+				token = Punctuator.RPAREN;
+				break;
+			case '[':
+				token = Punctuator.LBRACK;
+				break;
+			case ']':
+				token = Punctuator.RBRACK;
+				break;
+			case '{':
+				token = Punctuator.LBRACE;
+				break;
+			case '}':
+				token = Punctuator.RBRACE;
+				break;
+			case ':':
+				token = Punctuator.COLON;
+				break;
+			case ';':
+				token = Punctuator.SEMICOLON;
+				break;
+			case '?':
+				token = Punctuator.CONDITIONAL;
+				break;
+			case '.': // . ... number-start-with-period
+				scan_.ignore();
+				if (scan_.match('.')) {
+					if (scan_.peek() == '.') {
+						scan_.ignore();
+					}
+				}
+				token = Punctuator.PERIOD;
+				token = Punctuator.ELLIPSIS;
+				break;
+			case '+':
+				token = Punctuator.INC;
+				break;
+			case '-':
+				token = Punctuator.DEC;
+				break;
+			case '=':
+				token = Punctuator.ARROW;
+				break;
+				
+			// Single-character unary operators
+			case '~':
+				token = UnaryOp.BIT_NOT;
+				break;
+			
+			// Whitespace
+			case '\n':
+				column_ = 0;
+				line_++;
+			case ' ':
+			case '\t':
+			case '\r':
+				column_++;
+				scan_.ignore();
+				token = Token.WHITESPACE;
+				break;
+			
+			// literals
+			default:
+				if (Character.isJavaIdentifierStart(scan_.peek())) {
+					token = scanIdentifierOrKeyword();
+				} else if (Character.isDigit(scan_.peek())) {
+					token = scanNumber();
+				} else {
+					token = new Illegal("Unrecognized character: " + scan_.peek());
+				}
+				break;
+			}
+		} while (token == Token.WHITESPACE);
 	}
 	
 	private void skipWhiteSpace() {
@@ -111,6 +194,8 @@ public class Lexer {
 				return scanFloatingPointNumber(literal);
 			break;
 		}
+		
+		return null; // To make compiler happy
 	}
 	
 	private String scanHexidecimalInteger() {
