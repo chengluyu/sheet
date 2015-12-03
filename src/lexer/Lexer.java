@@ -1,17 +1,36 @@
 package lexer;
 
 import text.Scanner;
+import text.RawStream;
 import token.*;
 
 public class Lexer {
 	
-	public Lexer() {
-		
+	public Lexer(RawStream stream) {
+		initialize(stream);
+	}
+	
+	public Token current() {
+		return current_;
+	}
+	
+	public void advance() {
+		scan();
 	}
 	
 	private Scanner scan_;
 	private int line_, column_;
 	private boolean eos_;
+	private Token current_;
+	
+	private void initialize(RawStream stream) {
+		scan_ = new Scanner(stream);
+		line_ = 1;
+		column_ = 1;
+		eos_ = false;
+		current_ = null;
+		scan();
+	}
 	
 	private void scan() {
 		if (eos_) return;
@@ -60,26 +79,115 @@ public class Lexer {
 				if (scan_.match('.')) {
 					if (scan_.peek() == '.') {
 						scan_.ignore();
+						token = Punctuator.ELLIPSIS;
+					} else {
+						token = new Illegal("Expected a period instead of " + scan_.peek());
 					}
-				}
-				token = Punctuator.PERIOD;
-				token = Punctuator.ELLIPSIS;
-				break;
-			case '+':
-				token = Punctuator.INC;
-				break;
-			case '-':
-				token = Punctuator.DEC;
-				break;
-			case '=':
-				token = Punctuator.ARROW;
+				} else if (Character.isDigit(scan_.peek()))
+					token = scanFloatingPointNumber("0");
+				else
+					token = Punctuator.PERIOD;
 				break;
 				
 			// Single-character unary operators
 			case '~':
 				token = UnaryOp.BIT_NOT;
 				break;
+				
+			case '!': // ! !=
+				scan_.ignore();
+				if (scan_.match('='))
+					token = ComparisionOp.NE;
+				else
+					token = UnaryOp.NOT;
+				break;
+				
+			case '=': // = => ==
+				scan_.ignore();
+				if (scan_.match('='))
+					token = ComparisionOp.EQ;
+				else if (scan_.match('>'))
+					token = Punctuator.ARROW;
+				else
+					token = AssignmentOp.ASSIGN;
+				break;
+				
+			case '<': // < <= << <<=
+				scan_.ignore();
+				if (scan_.match('<')) {
+					if (scan_.peek() == '=')
+						token = AssignmentOp.SHL;
+					else
+						token = BinaryOp.SHL;
+				} else if (scan_.match('='))
+					token = ComparisionOp.LTE;
+				else
+					token = ComparisionOp.LT;
+				break;
+				
+			case '>': // > >= >> >>=
+				scan_.ignore();
+				if (scan_.match('>')) {
+					if (scan_.peek() == '=')
+						token = AssignmentOp.SHR;
+					else
+						token = BinaryOp.SHR;
+				} else if (scan_.match('='))
+					token = ComparisionOp.GTE;
+				else
+					token = ComparisionOp.GT;
+				break;
+				
+			case '+': // + ++ +=
+				scan_.ignore();
+				if (scan_.match('+'))
+					token = Punctuator.INC;
+				else if (scan_.match('='))
+					token = AssignmentOp.ADD;
+				else
+					token = BinaryOp.ADD;
+				break;
+				
+			case '-': // - -- -=
+				scan_.ignore();
+				if (scan_.match('-'))
+					token = Punctuator.DEC;
+				else if (scan_.match('='))
+					token = AssignmentOp.SUB;
+				else
+					token = BinaryOp.SUB;
+				break;
+				
+			case '*': // * *=
+				scan_.ignore();
+				if (scan_.match('='))
+					token = AssignmentOp.MUL;
+				else
+					token = BinaryOp.MUL;
+				break;
 			
+			case '/': // / /= // /*
+				scan_.ignore();
+				if (scan_.match('='))
+					token = AssignmentOp.MUL;
+				else if (scan_.match('/')) {
+					skipSingleLineComment(true);
+					token = Token.SINGLE_LINE_COMMENT;
+				} else if (scan_.match('*')) {
+					skipMultipleLineComment(true);
+					token = Token.MULTIPLE_LINE_COMMENT;
+				} else
+					token = BinaryOp.DIV;
+				break;
+				
+			case '%': // % %=
+				scan_.ignore();
+				if (scan_.match('='))
+					token = AssignmentOp.MOD;
+				else
+					token = BinaryOp.MOD;
+				break;
+				
 			// Whitespace
 			case '\n':
 				column_ = 0;
@@ -103,7 +211,11 @@ public class Lexer {
 				}
 				break;
 			}
-		} while (token == Token.WHITESPACE);
+		} while (token == Token.WHITESPACE ||
+				token == Token.SINGLE_LINE_COMMENT ||
+				token == Token.MULTIPLE_LINE_COMMENT);
+		
+		current_ = token;
 	}
 	
 	private void skipWhiteSpace() {

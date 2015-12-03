@@ -104,5 +104,7 @@ public enum Tag {
 	STRING,
 	
 	// Scanner-internal use only
-	WHITESPACE
+	WHITESPACE,
+	SINGLE_LINE_COMMENT,
+	MULTIPLE_LINE_COMMENT
 }

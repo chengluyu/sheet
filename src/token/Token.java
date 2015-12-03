@@ -45,5 +45,7 @@ public class Token {
 	
 	public static final Token EOS = new Token(Tag.EOS, "end of source");
 	public static final Token WHITESPACE = new Token(Tag.WHITESPACE, "whitespace");
+	public static final Token SINGLE_LINE_COMMENT = new Token(Tag.SINGLE_LINE_COMMENT, "single line comment");
+	public static final Token MULTIPLE_LINE_COMMENT = new Token(Tag.MULTIPLE_LINE_COMMENT, "multiple line comment");
 	
 }
