@@ -7,10 +7,6 @@ public class Token {
 		literal_ = literal;
 	}
 	
-	public Tag getTag() {
-		return tag_;
-	}
-	
 	public String getLiteral() {
 		return literal_;
 	}
@@ -34,6 +30,11 @@ public class Token {
 	public boolean isUnaryOp() {
 		return false;
 	}
+	
+	public boolean isIdentifier() {
+		return false;
+	}
+	
 	
 	@Override
 	public String toString() {

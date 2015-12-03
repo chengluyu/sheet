@@ -10,12 +10,22 @@ public class Lexer {
 		initialize(stream);
 	}
 	
+	public boolean advance(Token tok) {
+		if (current_ == tok) {
+			advance();
+			return true;
+		}
+		return false;
+	}
+	
 	public Token current() {
 		return current_;
 	}
 	
-	public void advance() {
+	public Token advance() {
+		Token save = current_;
 		scan();
+		return save;
 	}
 	
 	private Scanner scan_;
