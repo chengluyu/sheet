@@ -15,6 +15,26 @@ public class Token {
 		return literal_;
 	}
 	
+	public boolean isPunctuator() {
+		return false;
+	}
+	
+	public boolean isAssignmentOp() {
+		return false;
+	}
+	
+	public boolean isBinaryOp() {
+		return false;
+	}
+	
+	public boolean isCompareOp() {
+		return false;
+	}
+	
+	public boolean isUnaryOp() {
+		return false;
+	}
+	
 	@Override
 	public String toString() {
 		return literal_;

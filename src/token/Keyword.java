@@ -59,8 +59,8 @@ public class Keyword extends Token {
 		reserve("typeof", UnaryOp.TYPEOF);
 		reserve("while", Tag.WHILE);
 		reserve("null", Tag.NULL_LITERAL);
-		reserve("true", Tag.TRUE_LITERAL);
-		reserve("false", Tag.FALSE_LITERAL);
+		reserve("true", BoolValue.TRUE);
+		reserve("false", BoolValue.FALSE);
 	}
 
 }

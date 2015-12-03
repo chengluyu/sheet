@@ -98,6 +98,10 @@ public enum Tag {
 	NULL_LITERAL,
 	TRUE_LITERAL,
 	FALSE_LITERAL,
+	INTEGER,
+	NUMBER,
+	CHAR,
+	STRING,
 	
 	// Scanner-internal use only
 	WHITESPACE

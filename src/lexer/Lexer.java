@@ -92,7 +92,7 @@ public class Lexer {
 				token = Token.WHITESPACE;
 				break;
 			
-			// literals
+			// Literals
 			default:
 				if (Character.isJavaIdentifierStart(scan_.peek())) {
 					token = scanIdentifierOrKeyword();
