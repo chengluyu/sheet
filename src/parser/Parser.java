@@ -28,7 +28,7 @@ public class Parser {
 		}
 	}
 
-	// Parsing routines
+	// Parsing routines about module
 	private void parseModuleDeclaration() {
 		if (lex_.advance(Keyword.MODULE)) {
 			Identifier id = expectIdentifier("expect a module name");
@@ -88,11 +88,54 @@ public class Parser {
 		}
 	}
 	
+	// Parsing routines about type system
+	
+	private void parseTypeSpecifier() {
+		/*
+		 * Some type specifier examples:
+		 * 1. int // just primitive type
+		 * 2. (int, char, float) // tuple type
+		 * 3. 
+		 */
+	}
+	
+	private void parseEnumDeclaration() {
+		
+	}
+	
+	private void parseClassDeclaration() {
+		
+	}
+	
+	private void parseAliasDeclaration() {
+		
+	}
+	
+	private void parseIfStatement() {
+		
+	}
+	
+	private void parseWhileLoop() {
+		
+	}
+	
+	private void parseDoWhileLoop() {
+		
+	}
+	
+	private void parseForLoop() {
+		
+	}
+	
+	private void parseTryCatchFinally() {
+		
+	}
+	
 	private void parseStatement() {
 		
 	}
 	
-	private void parseExpression() {
+	private void parseExpression(int rbp) {
 		
 	}
 	

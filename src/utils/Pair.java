@@ -1,12 +1,13 @@
 package utils;
 
-public class Twin<T> {
+public class Pair<K, V> {
 	
-	public Twin(T a, T b) {
-		first = a;
-		second = b;
+	public Pair(K k, V v) {
+		key = k;
+		value = v;
 	}
 	
-	public T first, second;
+	public K key;
+	public V value;
 	
 }
