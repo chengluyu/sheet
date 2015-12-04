@@ -31,8 +31,16 @@ public class Token {
 		return false;
 	}
 	
+	public boolean isOperator() {
+		return false;
+	}
+	
 	public boolean isIdentifier() {
 		return false;
+	}
+	
+	public Tag getTag() {
+		return tag_;
 	}
 	
 	

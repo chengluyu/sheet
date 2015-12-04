@@ -9,6 +9,11 @@ public class BinaryOp extends Token {
 	
 	private final int precedence_;
 	
+	@Override
+	public boolean isBinaryOp() {
+		return true;
+	}
+	
 	public int getPrecedence() {
 		return precedence_;
 	}
