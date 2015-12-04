@@ -1,4 +1,4 @@
-package parser;
+package type;
 
 public class FunctionType extends Type {
 	
@@ -22,8 +22,8 @@ public class FunctionType extends Type {
 
 	@Override
 	public String getTypeName() {
-		// TODO Auto-generated method stub
-		return null;
+		return String.format("func (%s) -> %s", argumentTypes_.getTypeName(), 
+				returnType_.getTypeName());
 	}
 
 	@Override

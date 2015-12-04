@@ -228,12 +228,6 @@ public class Lexer {
 		current_ = token;
 	}
 	
-	private void skipWhiteSpace() {
-		while (Character.isWhitespace(scan_.peek())) {
-			scan_.ignore();
-		}
-	}
-	
 	private void skipSingleLineComment(boolean noPrefix) {
 		if (!noPrefix) {
 			scan_.match('/');

@@ -1,4 +1,4 @@
-package parser;
+package type;
 
 import token.Keyword;
 import token.Tag;

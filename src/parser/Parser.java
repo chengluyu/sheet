@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import ast.*;
 import lexer.Lexer;
 import token.*;
+import type.EnumType;
+import type.Type;
+import utils.Pair;
 import utils.Twin;
 
 public class Parser {
@@ -98,8 +101,9 @@ public class Parser {
 		/*
 		 * Some type specifier examples:
 		 * 1. int // just primitive type
-		 * 2. (int, char, float) // tuple type
-		 * 3. 
+		 * 2. TypeName // user-defined type
+		 * 3. int[] // array type
+		 * 4. func(int)->int // function type
 		 */
 		return null;
 	}
@@ -160,6 +164,59 @@ public class Parser {
 		expect(Punctuator.SEMICOLON);
 	}
 	
+	private Pair<Identifier, AstNode> parseSingleConstantDeclaration() {
+		/*
+		 * Parsing something like `a = b`
+		 */
+		Identifier id = expectIdentifier("expect a constant name");
+		expect(AssignmentOp.ASSIGN);
+		AstNode value = parseExpression();
+		return new Pair<Identifier, AstNode>(id, value);
+	}
+	
+	private void parseConstantDeclaration() {
+		/*
+		 * Constant declaration is in following form:
+		 * const TypeName ConstA = blablabla, ConstB = blablabla;
+		 */
+		// expect(Keyword.CONST);
+		Type constType = parseTypeSpecifier();
+		Pair<Identifier, AstNode> assignment = parseSingleConstantDeclaration();
+		
+		while (lex_.advance(BinaryOp.COMMA)) {
+			assignment = parseSingleConstantDeclaration();
+			// TODO: working on assignment
+		}
+		expect(Punctuator.SEMICOLON);
+	}
+	
+	private Pair<Identifier, AstNode> parseSingleVariableDeclaration() {
+		/*
+		 * Parsing something like `a = b` or just an `a`
+		 */
+		Identifier id = expectIdentifier("expect a variable name");
+		AstNode value = null;
+		if (lex_.advance(AssignmentOp.ASSIGN)); {
+			value = parseExpression();
+		}
+		return new Pair<Identifier, AstNode>(id, value);
+	}
+	
+	private void parseVariableDeclaration() {
+		/*
+		 * Constant declaration is in following form:
+		 * TypeName VarA = blablabla, VarB;
+		 */
+		Type varType = parseTypeSpecifier();
+		Pair<Identifier, AstNode> assignment = parseSingleVariableDeclaration();
+		
+		while (lex_.advance(BinaryOp.COMMA)) {
+			assignment = parseSingleVariableDeclaration();
+			// TODO: working on assignment
+		}
+		expect(Punctuator.SEMICOLON);
+	}
+	
 	private void parseIfStatement() {
 		expect(Keyword.IF);
 		parseParenthesisExpression();
@@ -175,6 +232,12 @@ public class Parser {
 	}
 	
 	private void parseDoWhileLoop() {
+		/*
+		 * Do-while loop is in following form:
+		 * do 
+		 *   Statement
+		 * while (Expression);
+		 */
 		expect(Keyword.DO);
 		parseStatement();
 		expect(Keyword.WHILE);
@@ -184,6 +247,12 @@ public class Parser {
 	
 	private void parseForLoop() {
 		expect(Keyword.FOR);
+	}
+	
+	private void parseStatementBlock() {
+		expect(Punctuator.LBRACE);
+		
+		expect(Punctuator.RBRACE);
 	}
 	
 	private void parseStatement() {
@@ -206,9 +275,11 @@ public class Parser {
 		case WHILE:
 			parseWhileLoop();
 			break;
-			
+		case LBRACE:
+			parseStatementBlock();
+			break;
 		default:
-			
+			// TODO: report error unrecognized token
 		}
 	}
 	
@@ -256,8 +327,8 @@ public class Parser {
 		return left;
 	}
 	
-	private void parseExpression() {
-		parseExpression(0);
+	private AstNode parseExpression() {
+		return parseExpression(0);
 	}
 	
 	private void reportError(String info) {

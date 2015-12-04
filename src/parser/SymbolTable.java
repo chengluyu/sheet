@@ -2,10 +2,12 @@ package parser;
 
 import java.util.HashMap;
 
+import type.Type;
+
 public class SymbolTable {
 
 	public SymbolTable(SymbolTable parent) {
-		symbols_ = new HashMap<String, String>();
+		symbols_ = new HashMap<String, Type>();
 		parent_ = parent;
 	}
 	
@@ -13,18 +15,21 @@ public class SymbolTable {
 		return parent_;
 	}
 	
-	public void insert(String id, String type) {
+	public void insert(String id, Type type) {
 		symbols_.put(id, type);
 	}
 	
-	public void contains(String id) {
-		SymbolTable tab = this;
-		while (tab != null) {
-			
+	public boolean contains(String id) {
+		SymbolTable table = this;
+		while (table != null) {
+			if (table.contains(id))
+				return true;
+			table = table.getParent();
 		}
+		return false;
 	}
 	
-	private HashMap<String, String> symbols_;
+	private HashMap<String, Type> symbols_;
 	private SymbolTable parent_;
 
 }

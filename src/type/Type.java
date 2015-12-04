@@ -1,4 +1,4 @@
-package parser;
+package type;
 
 public abstract class Type {
 	

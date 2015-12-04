@@ -1,4 +1,4 @@
-package parser;
+package type;
 
 import java.util.ArrayList;
 import token.Identifier;
