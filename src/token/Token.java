@@ -7,7 +7,7 @@ public class Token {
 		literal_ = literal;
 	}
 	
-	public String getLiteral() {
+	public final String getLiteral() {
 		return literal_;
 	}
 	

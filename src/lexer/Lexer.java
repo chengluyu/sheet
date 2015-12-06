@@ -3,6 +3,7 @@ package lexer;
 import text.Scanner;
 import text.RawStream;
 import token.*;
+import utils.LexicalException;
 
 public class Lexer {
 	
@@ -22,27 +23,24 @@ public class Lexer {
 		return current_;
 	}
 	
-	public Token advance() {
+	public Token advance() throws LexicalException {
 		Token save = current_;
 		scan();
 		return save;
 	}
 	
 	private Scanner scan_;
-	private int line_, column_;
 	private boolean eos_;
 	private Token current_;
 	
-	private void initialize(RawStream stream) {
+	private void initialize(RawStream stream) throws LexicalException {
 		scan_ = new Scanner(stream);
-		line_ = 1;
-		column_ = 1;
 		eos_ = false;
 		current_ = null;
 		scan();
 	}
 	
-	private void scan() {
+	private void scan() throws LexicalException {
 		if (eos_) return;
 		
 		Token token = null;
@@ -58,30 +56,39 @@ public class Lexer {
 				
 			// Single-character punctuators
 			case '(':
+				scan_.ignore();
 				token = Punctuator.LPAREN;
 				break;
 			case ')':
+				scan_.ignore();
 				token = Punctuator.RPAREN;
 				break;
 			case '[':
+				scan_.ignore();
 				token = Punctuator.LBRACK;
 				break;
 			case ']':
+				scan_.ignore();
 				token = Punctuator.RBRACK;
 				break;
 			case '{':
+				scan_.ignore();
 				token = Punctuator.LBRACE;
 				break;
 			case '}':
+				scan_.ignore();
 				token = Punctuator.RBRACE;
 				break;
 			case ':':
+				scan_.ignore();
 				token = Punctuator.COLON;
 				break;
 			case ';':
+				scan_.ignore();
 				token = Punctuator.SEMICOLON;
 				break;
 			case '?':
+				scan_.ignore();
 				token = Punctuator.CONDITIONAL;
 				break;
 			case '.': // . ... number-start-with-period
@@ -91,7 +98,7 @@ public class Lexer {
 						scan_.ignore();
 						token = Punctuator.ELLIPSIS;
 					} else {
-						token = new Illegal("Expected a period instead of " + scan_.peek());
+						throw new LexicalException("Expected a period instead of " + scan_.peek());
 					}
 				} else if (Character.isDigit(scan_.peek()))
 					token = scanFloatingPointNumber("0");
@@ -101,6 +108,7 @@ public class Lexer {
 				
 			// Single-character unary operators
 			case '~':
+				scan_.ignore();
 				token = UnaryOp.BIT_NOT;
 				break;
 				
@@ -200,12 +208,9 @@ public class Lexer {
 				
 			// Whitespace
 			case '\n':
-				column_ = 0;
-				line_++;
 			case ' ':
 			case '\t':
 			case '\r':
-				column_++;
 				scan_.ignore();
 				token = Token.WHITESPACE;
 				break;
@@ -217,7 +222,7 @@ public class Lexer {
 				} else if (Character.isDigit(scan_.peek())) {
 					token = scanNumber();
 				} else {
-					token = new Illegal("Unrecognized character: " + scan_.peek());
+					throw new LexicalException("unrecognized character: " + scan_.peek());
 				}
 				break;
 			}
@@ -261,6 +266,89 @@ public class Lexer {
 		}
 	}
 	
+	private void skipWhiteSpace() {
+		while (Character.isWhitespace(scan_.peek()))
+			scan_.ignore();
+	}
+	
+	private StringValue scanStringLiteral() throws LexicalException {
+		StringBuilder sb = new StringBuilder();
+		
+		do {
+			if (scan_.match('\\')) {
+				switch (scan_.peek()) {
+				case '\n':
+					scan_.ignore();
+					skipWhiteSpace();
+					break;
+				case 'n':
+					scan_.ignore();
+					sb.append('\n');
+					break;
+				case 't':
+					scan_.ignore();
+					sb.append('\t');
+					break;
+				case 'r':
+					scan_.ignore();
+					sb.append('\r');
+					break;
+				case 'u':
+					scan_.ignore();
+					if (scan_.match('{')) {
+						int codepoint = Integer.parseInt(scanHexidecimalInteger());
+						if (codepoint > 0x10FFFF) {
+							throw new LexicalException("invaild Unicode code point");
+						}
+						sb.append(Character.lowSurrogate(codepoint));
+						sb.append(Character.highSurrogate(codepoint));
+						if (!scan_.match('}'))
+							throw new LexicalException("missing right brace in an Unicode escapee");
+					} else {
+						throw new LexicalException("invaild Unicode escapee character");
+					}
+				default:
+					throw new LexicalException(String.format(
+							"unknown escapee character '%c'", scan_.next()));
+				}
+			} else {
+				sb.append(scan_.next());
+			}
+		} while (scan_.match('"'));
+		
+		return new StringValue(sb.toString());
+	}
+	
+	private CharValue scanCharLiteral() throws LexicalException {
+		char ch;
+		
+		if (scan_.match('\\')) {
+			switch (scan_.peek()) {
+			case 'n':
+				scan_.ignore();
+				ch = '\n';
+				break;
+			case 't':
+				scan_.ignore();
+				ch = '\t';
+				break;
+			case 'r':
+				scan_.ignore();
+				ch = '\r';
+				break;
+			case 'x':
+				scan_.ignore();
+				
+				break;
+			}
+		} else if (scan_.match('\n'))
+			throw new LexicalException("invaild char constant");
+		else
+			ch = scan_.next();
+		
+		return new CharValue(ch); 
+	}
+	
 	private Token scanIdentifierOrKeyword() {
 		if (!Character.isJavaIdentifierStart(scan_.peek()))
 			return null;
@@ -281,7 +369,7 @@ public class Lexer {
 		return new Identifier(word);
 	}
 	
-	private Token scanNumber() {
+	private Token scanNumber() throws LexicalException {
 		scan_.match('0');
 		
 		String literal;
@@ -301,7 +389,7 @@ public class Lexer {
 			break;
 		default:
 			if (Character.isDigit(scan_.peek()))
-				literal = scanDecimalInteger();
+				literal = scanDecimalInteger(true);
 			else
 				literal = "0";
 			
@@ -310,27 +398,126 @@ public class Lexer {
 				return scanFloatingPointNumber(literal);
 			break;
 		}
+		IntegerValue.Type type = scanIntegerType();
 		
-		return null; // To make compiler happy
+		return new IntegerValue(literal, type);
 	}
 	
 	private String scanHexidecimalInteger() {
-		return null;
+		StringBuilder sb = new StringBuilder();
+		if (isHexidecimalDigit(scan_.peek())) {
+			do {
+				sb.append(scan_.next());
+			} while (isHexidecimalDigit(scan_.peek()));
+		}
+		return sb.toString();
 	}
 	
 	private String scanOctalInteger() {
-		return null;
+		StringBuilder sb = new StringBuilder();
+		if (isOctalDigit(scan_.peek())) {
+			do {
+				sb.append(scan_.next());
+			} while (isOctalDigit(scan_.peek()));
+		}
+		return sb.toString();
 	}
 	
 	private String scanBinaryInteger() {
-		return null;
+		StringBuilder sb = new StringBuilder();
+		if (isBinaryDigit(scan_.peek())) {
+			do {
+				sb.append(scan_.next());
+			} while (isBinaryDigit(scan_.peek()));
+		}
+		return sb.toString();
 	}
 	
-	private String scanDecimalInteger() {
-		return null;
+	private IntegerValue.Type scanIntegerType() throws LexicalException {
+		// i8, i16, i32, i64, u8, u16, u32, u64
+		if (scan_.peek() == 'i') {
+			int size = Integer.parseInt(scanDecimalInteger(false));
+			switch (size) {
+			case 8: return IntegerValue.Type.int8;
+			case 16: return IntegerValue.Type.int16;
+			case 32: return IntegerValue.Type.int32;
+			case 64: return IntegerValue.Type.int64;
+			default: throw new LexicalException("invaild integer suffix");
+			}
+		} else if (scan_.peek() == 'u') {
+			int size = Integer.parseInt(scanDecimalInteger(false));
+			switch (size) {
+			case 8: return IntegerValue.Type.uint8;
+			case 16: return IntegerValue.Type.uint16;
+			case 32: return IntegerValue.Type.uint32;
+			case 64: return IntegerValue.Type.uint64;
+			default: throw new LexicalException("invaild integer suffix");
+			}
+		} else return IntegerValue.Type.int32; // default integer type
 	}
 	
-	private Token scanFloatingPointNumber(String intPart) {
-		return null;
+	private NumberValue.Type scanNumberType() throws LexicalException {
+		// i8, i16, i32, i64, u8, u16, u32, u64
+		if (scan_.peek() == 'f') {
+			int size = Integer.parseInt(scanDecimalInteger(false));
+			if (size == 32)
+				return NumberValue.Type.float32;
+			else if (size == 64)
+				return NumberValue.Type.float64;
+			else
+				throw new LexicalException("invaild number suffix");
+		} else return NumberValue.Type.float64; // default number type;
 	}
+	
+	private String scanDecimalInteger(boolean nullable) throws LexicalException {
+		StringBuilder sb = new StringBuilder();
+		if (isDecimalDigit(scan_.peek())) {
+			do {
+				sb.append(scan_.next());
+			} while (isDecimalDigit(scan_.peek()));
+		} else if (!nullable) {
+			throw new LexicalException("expect a dicimal integer");
+		}
+		return sb.toString();
+	}
+	
+	private NumberValue scanFloatingPointNumber(String intPart) throws LexicalException {
+		// fraction part
+		StringBuilder sb = new StringBuilder();
+		if (scan_.match('.')) {
+			sb.append('.');
+			sb.append(scanDecimalInteger(false));
+		}
+		// exponent part
+		if (scan_.match('e') || scan_.match('E')) {
+			sb.append('E');
+			if (scan_.peek() == '+' || scan_.peek() == '-')
+				sb.append(scan_.next());
+			sb.append(scanDecimalInteger(false));
+		}
+		// number suffix
+		NumberValue.Type type = scanNumberType();
+		return new NumberValue(sb.toString(), type);
+	}
+	
+	// some helper functions
+	
+	private static boolean isDecimalDigit(char ch) {
+		return '0' <= ch && ch <= '9';
+	}
+	
+	private static boolean isBinaryDigit(char ch) {
+		return ch == '0' || ch == '1';
+	}
+	
+	private static boolean isOctalDigit(char ch) {
+		return '0' <= ch && ch <= '7';
+	}
+	
+	private static boolean isHexidecimalDigit(char ch) {
+		return ('0' <= ch && ch <= '9') ||
+				('A' <= ch && ch <= 'F') ||
+				('a' <= ch && ch <= 'f');
+	}
+	
 }

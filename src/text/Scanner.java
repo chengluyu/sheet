@@ -7,10 +7,6 @@ public class Scanner {
 		advance();
 	}
 	
-	public boolean end() {
-		return end_;
-	}
-	
 	public char peek() {
 		return peek_;
 	}

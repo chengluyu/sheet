@@ -8,34 +8,45 @@ import token.*;
 import type.EnumType;
 import type.Type;
 import utils.Pair;
+import utils.ParsingException;
 import utils.Twin;
+import utils.UnimplementedException;
 
-public class Parser {
+public class SingleFileParser {
 	
-	public Parser(Lexer lex) {
+	public SingleFileParser(Lexer lex) {
 		lex_ = lex;
+		scope_ = new Scope();
+	}
+	
+	public static enum State {
+		PARSING,
+		FINISHED
 	}
 	
 	private Lexer lex_;
+	private Scope scope_;
 	
 	// Some common helper functions
-	private Identifier expectIdentifier(String errorMessage) {
+	private Identifier expectIdentifier(String errorMessage) throws ParsingException {
 		if (!lex_.current().isIdentifier()) {
-			// report error: expect a export name
+			reportParsingError("expect an identifier");
 			return null;
 		} else {
 			return (Identifier) lex_.advance();
 		}
 	}
 	
-	private void expect(Token wish) {
+	private void expect(Token wish) throws ParsingException {
 		if (lex_.current() != wish) {
 			// report error: expect wish.toString() instead of lex_.current().toString()
+			reportParsingError("expect an " + wish.toString() + " instead of "
+					+ lex_.current().toString());
 		}
 	}
 
 	// Parsing routines about module
-	private void parseModuleDeclaration() {
+	private void parseModuleDeclaration() throws ParsingException {
 		if (lex_.advance(Keyword.MODULE)) {
 			Identifier id = expectIdentifier("expect a module name");
 			// set current module name to id
@@ -44,7 +55,7 @@ public class Parser {
 		}
 	}
 	
-	private Twin<Identifier> parseImportName(Identifier preparsed) {
+	private Twin<Identifier> parseImportName(Identifier preparsed) throws ParsingException {
 		Identifier exportName = preparsed, alias = null;
 		
 		if (exportName == null)
@@ -60,8 +71,9 @@ public class Parser {
 	 * Parse import name sequence in following form:
 	 * ID ("as" ID)? ("," ID ("as" ID)?)*
 	 * @param firstId 
+	 * @throws ParsingException 
 	 */
-	private void parseImportNameList(Identifier firstId) {
+	private void parseImportNameList(Identifier firstId) throws ParsingException {
 		Twin<Identifier> idPair = parseImportName(firstId);
 		
 		while (lex_.advance(BinaryOp.COMMA)) {
@@ -70,7 +82,7 @@ public class Parser {
 		}
 	}
 	
-	private void parseImportClause() {
+	private void parseImportClause() throws ParsingException {
 		/*
 		 * Single import clause has following several forms:
 		 * 1. import SomeModule;
@@ -108,7 +120,7 @@ public class Parser {
 		return null;
 	}
 	
-	private ArrayList<Identifier> parseIdentifierList() {
+	private ArrayList<Identifier> parseIdentifierList() throws ParsingException {
 		ArrayList<Identifier> idList = new ArrayList<Identifier>();
 		
 		if (lex_.current().isIdentifier()) {
@@ -122,13 +134,13 @@ public class Parser {
 		return idList;
 	}
 	
-	private void parseParenthesisExpression() {
+	private void parseParenthesisExpression() throws ParsingException {
 		expect(Punctuator.LPAREN);
 		parseExpression();
 		expect(Punctuator.RPAREN);
 	}
 	
-	private EnumType parseEnumDeclaration() {
+	private EnumType parseEnumDeclaration() throws ParsingException {
 		/*
 		 * Enum type declaration is in the following form:
 		 * enum EnumName {
@@ -147,11 +159,11 @@ public class Parser {
 		return type;
 	}
 	
-	private void parseClassDeclaration() {
-		expect(Keyword.CLASS);
+	private void parseClassDeclaration() throws Exception {
+		throw new UnimplementedException("Unimplemented parsing routinue: class");
 	}
 	
-	private void parseAliasDeclaration() {
+	private void parseAliasDeclaration() throws ParsingException {
 		/*
 		 * Alias type declaration is in the following form:
 		 * type TypeA = TypeB;
@@ -164,7 +176,7 @@ public class Parser {
 		expect(Punctuator.SEMICOLON);
 	}
 	
-	private Pair<Identifier, AstNode> parseSingleConstantDeclaration() {
+	private Pair<Identifier, AstNode> parseSingleConstantDeclaration() throws ParsingException {
 		/*
 		 * Parsing something like `a = b`
 		 */
@@ -174,7 +186,7 @@ public class Parser {
 		return new Pair<Identifier, AstNode>(id, value);
 	}
 	
-	private void parseConstantDeclaration() {
+	private void parseConstantDeclaration() throws ParsingException {
 		/*
 		 * Constant declaration is in following form:
 		 * const TypeName ConstA = blablabla, ConstB = blablabla;
@@ -190,7 +202,7 @@ public class Parser {
 		expect(Punctuator.SEMICOLON);
 	}
 	
-	private Pair<Identifier, AstNode> parseSingleVariableDeclaration() {
+	private Pair<Identifier, AstNode> parseSingleVariableDeclaration() throws ParsingException {
 		/*
 		 * Parsing something like `a = b` or just an `a`
 		 */
@@ -202,7 +214,7 @@ public class Parser {
 		return new Pair<Identifier, AstNode>(id, value);
 	}
 	
-	private void parseVariableDeclaration() {
+	private void parseVariableDeclaration() throws ParsingException {
 		/*
 		 * Constant declaration is in following form:
 		 * TypeName VarA = blablabla, VarB;
@@ -217,7 +229,7 @@ public class Parser {
 		expect(Punctuator.SEMICOLON);
 	}
 	
-	private void parseIfStatement() {
+	private void parseIfStatement() throws Exception {
 		expect(Keyword.IF);
 		parseParenthesisExpression();
 		parseStatement();
@@ -225,13 +237,13 @@ public class Parser {
 			parseStatement();
 	}
 	
-	private void parseWhileLoop() {
+	private void parseWhileLoop() throws Exception {
 		expect(Keyword.WHILE);
 		parseParenthesisExpression();
 		parseStatement();
 	}
 	
-	private void parseDoWhileLoop() {
+	private void parseDoWhileLoop() throws Exception {
 		/*
 		 * Do-while loop is in following form:
 		 * do 
@@ -245,17 +257,17 @@ public class Parser {
 		expect(Punctuator.SEMICOLON);
 	}
 	
-	private void parseForLoop() {
+	private void parseForLoop() throws ParsingException {
 		expect(Keyword.FOR);
 	}
 	
-	private void parseStatementBlock() {
+	private void parseStatementBlock() throws ParsingException {
 		expect(Punctuator.LBRACE);
 		
 		expect(Punctuator.RBRACE);
 	}
 	
-	private void parseStatement() {
+	private void parseStatement() throws Exception {
 		switch (lex_.current().getTag()) {
 		case CLASS:
 			parseClassDeclaration();
@@ -300,7 +312,7 @@ public class Parser {
 		return null;
 	}
 	
-	private AstNode parseTernaryCondition(Operator op, AstNode preparsed) {
+	private AstNode parseTernaryCondition(Operator op, AstNode preparsed) throws ParsingException {
 		AstNode cond = preparsed,
 				then = parseExpression(0),
 				otherwise = null;
@@ -331,8 +343,12 @@ public class Parser {
 		return parseExpression(0);
 	}
 	
-	private void reportError(String info) {
+	private void parseModule() {
 		
+	}
+	
+	private void reportParsingError(String message) throws ParsingException {
+		throw new ParsingException(message);
 	}
 	
 }

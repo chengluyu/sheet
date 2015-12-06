@@ -1,9 +1,11 @@
 package token;
 
-public class Value extends Token {
+public abstract class Value extends Token {
 
 	public Value(Tag tag, String literal) {
 		super(tag, literal);
 	}
+	
+	public abstract Object getNativeObject();
 
 }

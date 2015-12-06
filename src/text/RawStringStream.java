@@ -10,7 +10,7 @@ public class RawStringStream extends RawStream {
 	@Override
 	public char advance() {
 		if (at_ < text_.length())
-			return text_.charAt(at_);
+			return text_.charAt(at_++);
 		return RawStream.EOF;
 	}
 	

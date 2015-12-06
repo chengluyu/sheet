@@ -4,9 +4,6 @@ public enum Tag {
 	// End of source indicator
 	EOS,
 	
-	// Illegal token
-	ILLEGAL,
-	
 	// Punctuators
 	LPAREN,
 	RPAREN,
@@ -107,6 +104,8 @@ public enum Tag {
 	NULL_LITERAL,
 	TRUE_LITERAL,
 	FALSE_LITERAL,
+	STRING_LITERAL,
+	CHAR_LITERAL,
 	INTEGER,
 	NUMBER,
 	
