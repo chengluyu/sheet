@@ -7,11 +7,11 @@ import utils.LexicalException;
 
 public class Lexer {
 	
-	public Lexer(RawStream stream) {
+	public Lexer(RawStream stream) throws LexicalException {
 		initialize(stream);
 	}
 	
-	public boolean advance(Token tok) {
+	public boolean advance(Token tok) throws LexicalException {
 		if (current_ == tok) {
 			advance();
 			return true;
@@ -214,6 +214,16 @@ public class Lexer {
 				scan_.ignore();
 				token = Token.WHITESPACE;
 				break;
+				
+			// String and character literals
+			case '"':
+				scan_.ignore();
+				token = scanStringLiteral();
+				break;
+			case '\'':
+				scan_.ignore();
+				token = scanCharLiteral();
+				break;
 			
 			// Literals
 			default:
@@ -271,6 +281,14 @@ public class Lexer {
 			scan_.ignore();
 	}
 	
+	private int scanCharEscapeeCodePoint(int maxValue) throws LexicalException {
+		int codepoint = Integer.parseInt(scanHexidecimalInteger());
+		if (codepoint > maxValue) {
+			throw new LexicalException("invaild Unicode code point");
+		}
+		return codepoint;
+	}
+	
 	private StringValue scanStringLiteral() throws LexicalException {
 		StringBuilder sb = new StringBuilder();
 		
@@ -296,10 +314,7 @@ public class Lexer {
 				case 'u':
 					scan_.ignore();
 					if (scan_.match('{')) {
-						int codepoint = Integer.parseInt(scanHexidecimalInteger());
-						if (codepoint > 0x10FFFF) {
-							throw new LexicalException("invaild Unicode code point");
-						}
+						int codepoint = scanCharEscapeeCodePoint(0x10FFFF);
 						sb.append(Character.lowSurrogate(codepoint));
 						sb.append(Character.highSurrogate(codepoint));
 						if (!scan_.match('}'))
@@ -338,13 +353,20 @@ public class Lexer {
 				break;
 			case 'x':
 				scan_.ignore();
-				
+				int codepoint = scanCharEscapeeCodePoint(0xFFFF);
+				ch = (char) codepoint;
 				break;
+			default:
+				throw new LexicalException(String.format(
+						"unknown escapee character '%c'", scan_.next()));
 			}
 		} else if (scan_.match('\n'))
 			throw new LexicalException("invaild char constant");
 		else
 			ch = scan_.next();
+		
+		if (!scan_.match('\''))
+			throw new LexicalException("invaild character literal");
 		
 		return new CharValue(ch); 
 	}
