@@ -1,9 +1,17 @@
 package symbol;
 
+import type.Type;
+
 public class ConstantSymbol extends Symbol {
 
-	public ConstantSymbol() {
-		// TODO Auto-generated constructor stub
+	public ConstantSymbol(String funcName) {
+		super(funcName);
+	}
+
+	@Override
+	public Type getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

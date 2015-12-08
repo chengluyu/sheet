@@ -24,6 +24,7 @@ public class Punctuator extends Token {
 	public static final Punctuator CONDITIONAL = new Punctuator(Tag.CONDITIONAL, "?");
 	public static final Punctuator INC = new Punctuator(Tag.INC, "++");
 	public static final Punctuator DEC = new Punctuator(Tag.DEC, "--");
-	public static final Punctuator ARROW = new Punctuator(Tag.ARROW, "=>");
+	public static final Punctuator LAMBDA_ARROW = new Punctuator(Tag.LAMBDA_ARROW, "=>");
+	public static final Punctuator RETURN_ARROW = new Punctuator(Tag.RETURN_ARROW, "->");
 
 }

@@ -1,0 +1,12 @@
+// this is a comment
+func work(a: int, b: int) -> int {
+	let c = a + b, d = a - b;
+	return c * d;
+}
+/*
+	this is a multiple line comment
+*/
+func main(args: string[]) -> int {
+	print("Hello, world!");
+	return 0;
+}

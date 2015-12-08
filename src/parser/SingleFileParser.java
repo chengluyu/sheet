@@ -4,10 +4,16 @@ import java.util.ArrayList;
 
 import ast.*;
 import lexer.Lexer;
-import token.*;
+import symbol.TypeSymbol;
+import token.AssignmentOp;
+import token.BinaryOp;
+import token.Identifier;
+import token.Keyword;
+import token.Punctuator;
+import token.Token;
+import token.Value;
 import type.EnumType;
 import type.Type;
-import utils.LexicalException;
 import utils.Pair;
 import utils.ParsingException;
 import utils.Twin;
@@ -17,7 +23,7 @@ public class SingleFileParser {
     
     public SingleFileParser(Lexer lex) {
         lex_ = lex;
-        scope_ = new Scope();
+        currentScope_ = new Scope();
     }
     
     public static enum State {
@@ -25,8 +31,17 @@ public class SingleFileParser {
         FINISHED
     }
     
+    public void parse() throws Exception {
+    	parseModuleDeclaration();
+    	parseImportClause();
+    	parseDeclarations();
+    }
+    
     private Lexer lex_;
-    private Scope scope_;
+    private Scope currentScope_;
+    private AstNodeFactory astNode_;
+    
+    private static final int LOWEST_PRECEDENCE = 0;
     
     // Some common helper functions
     private Identifier expectIdentifier(String errorMessage) throws Exception {
@@ -108,6 +123,10 @@ public class SingleFileParser {
         }
     }
     
+    private void parseExportDeclaration() {
+    	
+    }
+    
     // Parsing routines about type system
     
     private Type parseTypeSpecifier() {
@@ -135,10 +154,11 @@ public class SingleFileParser {
         return idList;
     }
     
-    private void parseParenthesisExpression() throws Exception {
+    private Expression parseParenthesisExpression() throws Exception {
         expect(Punctuator.LPAREN);
-        parseExpression();
+        Expression expr = parseExpression();
         expect(Punctuator.RPAREN);
+        return expr;
     }
     
     private EnumType parseEnumDeclaration() throws Exception {
@@ -160,7 +180,7 @@ public class SingleFileParser {
         return type;
     }
     
-    private void parseClassDeclaration() throws Exception {
+    private TypeSymbol parseClassDeclaration() throws Exception {
         throw new UnimplementedException("Unimplemented parsing routinue: class");
     }
     
@@ -230,21 +250,83 @@ public class SingleFileParser {
         expect(Punctuator.SEMICOLON);
     }
     
-    private void parseIfStatement() throws Exception {
+    private void parseSingleArgument() throws Exception {
+    	expectIdentifier("expect a argument name");
+    	expect(Punctuator.COLON);
+    	parseTypeSpecifier();
+    }
+    
+    private void parseArgumentList() throws Exception {
+    	expect(Punctuator.LPAREN);
+    	if (lex_.current().isIdentifier()) {
+    		do {
+    			parseSingleArgument();
+    		} while (lex_.advance(BinaryOp.COMMA));
+    	}
+    	expect(Punctuator.RPAREN);
+    }
+    
+    private void parseFunctionBody() throws Exception {
+    	expect(Punctuator.LBRACE);
+    	parseStatements(Punctuator.RBRACE);
+    	expect(Punctuator.RBRACE);
+    }
+    
+    private void parseFunctionDeclaration() throws Exception {
+    	expect(Keyword.FUNC);
+    	parseArgumentList();
+    	if (lex_.advance(Punctuator.RETURN_ARROW)) {
+    		parseTypeSpecifier();
+    	}
+    	parseFunctionBody();
+    }
+    
+    private void parseDeclarations() throws Exception {
+    	switch (lex_.currentTag()) {
+    	case CLASS:
+    		parseClassDeclaration();
+    		break;
+    	case ENUM:
+    		parseEnumDeclaration();
+    		break;
+    	case TYPE:
+    		parseAliasDeclaration();
+    		break;
+    	case FUNC:
+    		parseFunctionDeclaration();
+    		break;
+    	case CONST:
+    		parseConstantDeclaration();
+    		break;
+    	case LET:
+    		parseVariableDeclaration();
+    		break;
+    	case EXPORT:
+    		parseExportDeclaration();
+    		break;
+    	default:
+    		throw new ParsingException(
+    				"only declaration statements can be placed in top environment");
+    	}
+    }
+    
+    private IfStatement parseIfStatement() throws Exception {
         expect(Keyword.IF);
-        parseParenthesisExpression();
-        parseStatement();
+        Expression cond = parseParenthesisExpression();
+        Statement then = parseStatement(), otherwise = null;
         if (lex_.advance(Keyword.ELSE))
-            parseStatement();
+            otherwise = parseStatement();
+        return astNode_.createIfStmt(cond, then, otherwise);
     }
     
-    private void parseWhileLoop() throws Exception {
+    private WhileStatement parseWhileLoop() throws Exception {
         expect(Keyword.WHILE);
-        parseParenthesisExpression();
-        parseStatement();
+        Expression cond = parseParenthesisExpression();
+        Statement body = parseStatement();
+        return astNode_.createWhileStmt(cond, body);
     }
     
-    private void parseDoWhileLoop() throws Exception {
+    private DoWhileStatement parseDoWhileLoop() throws Exception {
         /*
          * Do-while loop is in following form:
          * do 
@@ -252,10 +334,11 @@ public class SingleFileParser {
          * while (Expression);
          */
         expect(Keyword.DO);
-        parseStatement();
+        Statement body = parseStatement();
         expect(Keyword.WHILE);
-        parseParenthesisExpression();
+        Expression cond = parseParenthesisExpression();
         expect(Punctuator.SEMICOLON);
+        return astNode_.createDoWhileStmt(cond, body);
     }
     
     private void parseForLoop() throws Exception {
@@ -268,42 +351,47 @@ public class SingleFileParser {
         expect(Punctuator.RBRACE);
     }
     
-    private void parseStatement() throws Exception {
-        switch (lex_.current().getTag()) {
-        case CLASS:
-            parseClassDeclaration();
-            break;
+    private Statement parseStatement() throws Exception {
+        switch (lex_.currentTag()) {
         case DO:
-            parseDoWhileLoop();
-            break;
-        case ENUM:
-            parseEnumDeclaration();
-            break;
+            return parseDoWhileLoop();
         case FOR:
-            parseForLoop();
-            break;
+            return parseForLoop();
         case IF:
-            parseIfStatement();
-            break;
+            return parseIfStatement();
         case WHILE:
-            parseWhileLoop();
-            break;
+            return parseWhileLoop();
         case LBRACE:
-            parseStatementBlock();
-            break;
+            return parseStatementBlock();
         default:
             // TODO: report error unrecognized token
+        	return null;
         }
+    }
+    
+    private void parseStatements(Token endToken) throws Exception {
+    	while (lex_.current() != endToken) {
+    		parseStatement();
+    	}
     }
     
     // Parsing routines about expression
     // We use top down operator precedence method by Pratt
     
-    private AstNode parseNullDenotation(Token token) {
+    private Expression parseNullDenotation(Token token) {
+    	
+    	if (token.isIdentifier()) {
+    		
+    	} else if (token.isValue()) {
+    		return astNode_.createValueNode((Value) token);
+    	} else {
+    		
+    	}
+    	
         return null;
     }
     
-    private AstNode parseLeftNotation(BinaryOp op, AstNode left) throws Exception {
+    private Expression parseLeftNotation(BinaryOp op, AstNode left) throws Exception {
         AstNode right = parseExpression(op.getPrecedence());
         // TODO: do something with left and right
         
@@ -323,11 +411,11 @@ public class SingleFileParser {
         return null;
     }
     
-    private AstNode parseExpression(int rightBindingPower) throws Exception {
+    private Expression parseExpression(int rightBindingPower) throws Exception {
         Token token = lex_.advance();
-        AstNode left = parseNullDenotation(token);
+        Expression left = parseNullDenotation(token);
         while (true) {
-            if (!lex_.current().isBinaryOp())
+        	if (!lex_.current().isBinaryOp())
                 break;
             
             BinaryOp op = (BinaryOp) lex_.current();
@@ -340,12 +428,8 @@ public class SingleFileParser {
         return left;
     }
     
-    private AstNode parseExpression() throws Exception {
-        return parseExpression(0);
-    }
-    
-    private void parseModule() {
-        
+    private Expression parseExpression() throws Exception {
+        return parseExpression(LOWEST_PRECEDENCE);
     }
     
     private void reportParsingError(String message) throws Exception {

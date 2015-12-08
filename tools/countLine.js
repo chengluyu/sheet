@@ -37,6 +37,9 @@ function traverse(parent) {
   })
 }
 
-traverse("../");
-
-console.log(`Total: ${counter} lines, ${counter - nonempty} non-empty lines.`);
+if (process.argv.length <= 2)
+  console.log("Usage: iojs countLine.js DIRECTORY");
+else {
+  traverse(process.argv[2]);
+  console.log(`Total: ${counter} lines, ${counter - nonempty} non-empty lines.`);
+}

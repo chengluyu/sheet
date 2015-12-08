@@ -38,6 +38,7 @@ public class Keyword extends Token {
 		reserve("catch", Keyword.CATCH);
 		reserve("char", Keyword.CHAR);
 		reserve("class", Keyword.CLASS);
+		reserve("const", Keyword.CONST);
 		reserve("continue", Keyword.CONTINUE);
 		reserve("default", Keyword.DEFAULT);
 		reserve("do", Keyword.DO);
@@ -49,9 +50,11 @@ public class Keyword extends Token {
 		reserve("for", Keyword.FOR);
 		reserve("from", Keyword.FROM);
 		reserve("float", Keyword.FLOAT);
+		reserve("func", Keyword.FUNC);
 		reserve("if", Keyword.IF);
 		reserve("import", Keyword.IMPORT);
 		reserve("int", Keyword.INT);
+		reserve("let", Keyword.LET);
 		reserve("long", Keyword.LONG);
 		reserve("module", Keyword.MODULE);
 		reserve("new", Keyword.NEW);
@@ -79,6 +82,7 @@ public class Keyword extends Token {
 	public static final Keyword CHAR = new Keyword(Tag.CHAR, "char");
 	public static final Keyword CLASS = new Keyword(Tag.CLASS, "class");
 	public static final Keyword CONTINUE = new Keyword(Tag.CONTINUE, "continue");
+	public static final Keyword CONST = new Keyword(Tag.CONST, "const");
 	public static final Keyword DEFAULT = new Keyword(Tag.DEFAULT, "default");
 	public static final Keyword DO = new Keyword(Tag.DO, "do");
 	public static final Keyword DOUBLE = new Keyword(Tag.DOUBLE, "double");
@@ -89,9 +93,11 @@ public class Keyword extends Token {
 	public static final Keyword FLOAT = new Keyword(Tag.FLOAT, "float");
 	public static final Keyword FOR = new Keyword(Tag.FOR, "for");
 	public static final Keyword FROM = new Keyword(Tag.FROM, "from");
+	public static final Keyword FUNC = new Keyword(Tag.FUNC, "func");
 	public static final Keyword IF = new Keyword(Tag.IF, "if");
 	public static final Keyword IMPORT = new Keyword(Tag.IMPORT, "import");
 	public static final Keyword INT = new Keyword(Tag.INT, "int");
+	public static final Keyword LET = new Keyword(Tag.LET, "let");
 	public static final Keyword LONG = new Keyword(Tag.LONG, "long");
 	public static final Keyword MODULE = new Keyword(Tag.MODULE, "module");
 	public static final Keyword NEW = new Keyword(Tag.NEW, "new");

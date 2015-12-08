@@ -7,5 +7,10 @@ public abstract class Value extends Token {
 	}
 	
 	public abstract Object getNativeObject();
+	
+	@Override
+	public boolean isValue() {
+		return true;
+	}
 
 }

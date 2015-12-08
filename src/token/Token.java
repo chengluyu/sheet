@@ -39,6 +39,10 @@ public class Token {
 		return false;
 	}
 	
+	public boolean isValue() {
+		return false;
+	}
+	
 	public Tag getTag() {
 		return tag_;
 	}

@@ -5,7 +5,7 @@ import text.RawStream;
 import token.*;
 import utils.LexicalException;
 
-public class Lexer {
+public final class Lexer {
 	
 	public Lexer(RawStream stream) throws LexicalException {
 		initialize(stream);
@@ -21,6 +21,10 @@ public class Lexer {
 	
 	public Token current() {
 		return current_;
+	}
+	
+	public Tag currentTag() {
+		return current_.getTag();
 	}
 	
 	public Token advance() throws LexicalException {
@@ -125,7 +129,7 @@ public class Lexer {
 				if (scan_.match('='))
 					token = ComparisionOp.EQ;
 				else if (scan_.match('>'))
-					token = Punctuator.ARROW;
+					token = Punctuator.LAMBDA_ARROW;
 				else
 					token = AssignmentOp.ASSIGN;
 				break;
@@ -172,6 +176,8 @@ public class Lexer {
 					token = Punctuator.DEC;
 				else if (scan_.match('='))
 					token = AssignmentOp.SUB;
+				else if (scan_.match('>'))
+					token = Punctuator.RETURN_ARROW;
 				else
 					token = BinaryOp.SUB;
 				break;
