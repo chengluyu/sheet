@@ -12,8 +12,6 @@ import token.Keyword;
 import token.Punctuator;
 import token.Token;
 import token.Value;
-import type.EnumType;
-import type.Type;
 import utils.Pair;
 import utils.ParsingException;
 import utils.Twin;
@@ -23,7 +21,6 @@ public class SingleFileParser {
     
     public SingleFileParser(Lexer lex) {
         lex_ = lex;
-        currentScope_ = new Scope();
     }
     
     public static enum State {
@@ -38,7 +35,6 @@ public class SingleFileParser {
     }
     
     private Lexer lex_;
-    private Scope currentScope_;
     private AstNodeFactory astNode_;
     
     private static final int LOWEST_PRECEDENCE = 0;
@@ -129,7 +125,7 @@ public class SingleFileParser {
     
     // Parsing routines about type system
     
-    private Type parseTypeSpecifier() {
+    private TypeSpecifier parseTypeSpecifier() {
         /*
          * Some type specifier examples:
          * 1. int // just primitive type
@@ -176,7 +172,6 @@ public class SingleFileParser {
         Identifier enumName = expectIdentifier("expect a enum name");
         expect(Punctuator.LBRACE);
         ArrayList<String> enumValues = parseEnumValueList();
-        // TODO: working on a and enumName
         expect(Punctuator.RBRACE);
         return astNode_.createEnumDecl(enumName.getLiteral(), enumValues);
     }
@@ -185,7 +180,7 @@ public class SingleFileParser {
         throw new UnimplementedException("Unimplemented parsing routinue: class");
     }
     
-    private void parseAliasDeclaration() throws Exception {
+    private TypeAliasDeclaration parseAliasDeclaration() throws Exception {
         /*
          * Alias type declaration is in the following form:
          * type TypeA = TypeB;
@@ -193,9 +188,9 @@ public class SingleFileParser {
         expect(Keyword.TYPE);
         Identifier alias = expectIdentifier("expect a alias type name");
         expect(AssignmentOp.ASSIGN);
-        Type origin = parseTypeSpecifier();
-        // TODO: working on alias and origin
+        TypeSpecifier origin = parseTypeSpecifier();
         expect(Punctuator.SEMICOLON);
+        return astNode_.createTypeAliasDecl(alias.getLiteral(), origin);
     }
     
     // Constant declaration
@@ -216,7 +211,7 @@ public class SingleFileParser {
          * const TypeName ConstA = blablabla, ConstB = blablabla;
          */
         expect(Keyword.CONST);
-        Type constType = parseTypeSpecifier();
+        TypeSpecifier constType = parseTypeSpecifier();
         ArrayList<Pair<String, Expression>> constants = new ArrayList<Pair<String, Expression>>();
         constants.add(parseSingleConstantDeclaration());
         while (lex_.advance(BinaryOp.COMMA))
@@ -245,7 +240,7 @@ public class SingleFileParser {
          * TypeName VarA = blablabla, VarB;
          */
     	expect(Keyword.LET);
-        Type varType = parseTypeSpecifier();
+        TypeSpecifier varType = parseTypeSpecifier();
         ArrayList<Pair<String, Expression>> vars = new ArrayList<Pair<String, Expression>>();
         vars.add(parseSingleVariableDeclaration());
         while (lex_.advance(BinaryOp.COMMA))
@@ -284,6 +279,7 @@ public class SingleFileParser {
     		parseTypeSpecifier();
     	}
     	parseFunctionBody();
+		return null;
     }
     
     private Declaration parseDeclarations() throws Exception {
@@ -300,8 +296,6 @@ public class SingleFileParser {
     		return parseConstantDeclaration();
     	case LET:
     		return parseVariableDeclaration();
-    	case EXPORT:
-    		return parseExportDeclaration();
     	default:
     		throw new ParsingException(
     				"only declaration statements can be placed in top environment");
@@ -382,14 +376,6 @@ public class SingleFileParser {
     // We use top down operator precedence method by Pratt
     
     private Expression parseNullDenotation(Token token) {
-    	
-    	if (token.isIdentifier()) {
-    		
-    	} else if (token.isValue()) {
-    		return astNode_.createValueNode((Value) token);
-    	} else {
-    		
-    	}
     	
         return null;
     }

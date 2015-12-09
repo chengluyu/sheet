@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import token.BinaryOp;
 import token.Tag;
-import type.*;
 import utils.Pair;
 
 public class AstNodeFactory {
@@ -38,20 +37,30 @@ public class AstNodeFactory {
 	
 	// Declaration creators
 	
-	public ConstantDeclaration createConstantDecl(Type ty, ArrayList<Pair<String, Expression>> cs) {
+	public ConstantDeclaration createConstantDecl(TypeSpecifier ty, ArrayList<Pair<String, Expression>> cs) {
 		return new ConstantDeclaration(ty, cs);
 	}
 	
-	public VariableDeclaration createVariableDecl(Type ty, ArrayList<Pair<String, Expression>> vs) {
+	public VariableDeclaration createVariableDecl(TypeSpecifier ty, ArrayList<Pair<String, Expression>> vs) {
 		return new VariableDeclaration(ty, vs);
 	}
 	
-	public FunctionDeclaration createFucntionDecl(String name, FunctionType fty, Statement body) {
+	public FunctionDeclaration createFucntionDecl(String name, FunctionSpecifier fty, Statement body) {
 		return new FunctionDeclaration(fty, body);
 	}
 	
 	public EnumDeclaration createEnumDecl(String name, ArrayList<String> values) {
 		return new EnumDeclaration(name, values);
+	}
+	
+	public TypeAliasDeclaration createTypeAliasDecl(String typeName, TypeSpecifier ty) {
+		return new TypeAliasDeclaration(typeName, ty);
+	}
+	
+	// Type specifier creators
+	
+	public ArrayTypeNode createArrayTypeSpec(TypeSpecifier elemType) {
+		return new ArrayTypeNode(elemType);
 	}
 	
 	// Expression creators
