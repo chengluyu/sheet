@@ -140,14 +140,16 @@ public class SingleFileParser {
         return null;
     }
     
-    private ArrayList<Identifier> parseIdentifierList() throws Exception {
-        ArrayList<Identifier> idList = new ArrayList<Identifier>();
+    private ArrayList<String> parseEnumValueList() throws Exception {
+        ArrayList<String> idList = new ArrayList<String>();
         
         if (lex_.current().isIdentifier()) {
-            idList.add((Identifier) lex_.advance());
+        	Identifier id = (Identifier) lex_.advance();
+            idList.add(id.getLiteral());
             
             while (lex_.advance(BinaryOp.COMMA)) {
-                idList.add(expectIdentifier("expect a identifier after a comma"));
+            	id = expectIdentifier("expect a identifier after a comma"); 
+                idList.add(id.getLiteral());
             }
         }
         
@@ -161,7 +163,9 @@ public class SingleFileParser {
         return expr;
     }
     
-    private EnumType parseEnumDeclaration() throws Exception {
+    // Type declarations
+    
+    private EnumDeclaration parseEnumDeclaration() throws Exception {
         /*
          * Enum type declaration is in the following form:
          * enum EnumName {
@@ -171,16 +175,13 @@ public class SingleFileParser {
         expect(Keyword.ENUM);
         Identifier enumName = expectIdentifier("expect a enum name");
         expect(Punctuator.LBRACE);
-        ArrayList<Identifier> a = parseIdentifierList();
+        ArrayList<String> enumValues = parseEnumValueList();
         // TODO: working on a and enumName
         expect(Punctuator.RBRACE);
-        
-        EnumType type = new EnumType(enumName.getLiteral());
-        type.addEnumValue(a);
-        return type;
+        return astNode_.createEnumDecl(enumName.getLiteral(), enumValues);
     }
     
-    private TypeSymbol parseClassDeclaration() throws Exception {
+    private ClassDeclaration parseClassDeclaration() throws Exception {
         throw new UnimplementedException("Unimplemented parsing routinue: class");
     }
     
@@ -197,57 +198,60 @@ public class SingleFileParser {
         expect(Punctuator.SEMICOLON);
     }
     
-    private Pair<Identifier, AstNode> parseSingleConstantDeclaration() throws Exception {
+    // Constant declaration
+    
+    private Pair<String, Expression> parseSingleConstantDeclaration() throws Exception {
         /*
          * Parsing something like `a = b`
          */
         Identifier id = expectIdentifier("expect a constant name");
         expect(AssignmentOp.ASSIGN);
-        AstNode value = parseExpression();
-        return new Pair<Identifier, AstNode>(id, value);
+        Expression value = parseExpression();
+        return new Pair<String, Expression>(id.getLiteral(), value);
     }
     
-    private void parseConstantDeclaration() throws Exception {
+    private ConstantDeclaration parseConstantDeclaration() throws Exception {
         /*
          * Constant declaration is in following form:
          * const TypeName ConstA = blablabla, ConstB = blablabla;
          */
-        // expect(Keyword.CONST);
+        expect(Keyword.CONST);
         Type constType = parseTypeSpecifier();
-        Pair<Identifier, AstNode> assignment = parseSingleConstantDeclaration();
-        
-        while (lex_.advance(BinaryOp.COMMA)) {
-            assignment = parseSingleConstantDeclaration();
-            // TODO: working on assignment
-        }
+        ArrayList<Pair<String, Expression>> constants = new ArrayList<Pair<String, Expression>>();
+        constants.add(parseSingleConstantDeclaration());
+        while (lex_.advance(BinaryOp.COMMA))
+        	constants.add(parseSingleConstantDeclaration());
         expect(Punctuator.SEMICOLON);
+        return astNode_.createConstantDecl(constType, constants);
     }
     
-    private Pair<Identifier, AstNode> parseSingleVariableDeclaration() throws Exception {
+    // Variable declaration
+    
+    private Pair<String, Expression> parseSingleVariableDeclaration() throws Exception {
         /*
          * Parsing something like `a = b` or just an `a`
          */
         Identifier id = expectIdentifier("expect a variable name");
-        AstNode value = null;
+        Expression value = null;
         if (lex_.advance(AssignmentOp.ASSIGN)); {
             value = parseExpression();
         }
-        return new Pair<Identifier, AstNode>(id, value);
+        return new Pair<String, Expression>(id.getLiteral(), value);
     }
     
-    private void parseVariableDeclaration() throws Exception {
+    private VariableDeclaration parseVariableDeclaration() throws Exception {
         /*
          * Constant declaration is in following form:
          * TypeName VarA = blablabla, VarB;
          */
+    	expect(Keyword.LET);
         Type varType = parseTypeSpecifier();
-        Pair<Identifier, AstNode> assignment = parseSingleVariableDeclaration();
-        
-        while (lex_.advance(BinaryOp.COMMA)) {
-            assignment = parseSingleVariableDeclaration();
-            // TODO: working on assignment
-        }
+        ArrayList<Pair<String, Expression>> vars = new ArrayList<Pair<String, Expression>>();
+        vars.add(parseSingleVariableDeclaration());
+        while (lex_.advance(BinaryOp.COMMA))
+        	vars.add(parseSingleVariableDeclaration());
         expect(Punctuator.SEMICOLON);
+        return astNode_.createVariableDecl(varType, vars);
     }
     
     private void parseSingleArgument() throws Exception {
@@ -266,13 +270,14 @@ public class SingleFileParser {
     	expect(Punctuator.RPAREN);
     }
     
-    private void parseFunctionBody() throws Exception {
+    private StatementBlock parseFunctionBody() throws Exception {
     	expect(Punctuator.LBRACE);
-    	parseStatements(Punctuator.RBRACE);
+    	StatementBlock body = parseStatementBlock(Punctuator.RBRACE);
     	expect(Punctuator.RBRACE);
+    	return body;
     }
     
-    private void parseFunctionDeclaration() throws Exception {
+    private FunctionDeclaration parseFunctionDeclaration() throws Exception {
     	expect(Keyword.FUNC);
     	parseArgumentList();
     	if (lex_.advance(Punctuator.RETURN_ARROW)) {
@@ -281,29 +286,22 @@ public class SingleFileParser {
     	parseFunctionBody();
     }
     
-    private void parseDeclarations() throws Exception {
+    private Declaration parseDeclarations() throws Exception {
     	switch (lex_.currentTag()) {
     	case CLASS:
-    		parseClassDeclaration();
-    		break;
+    		return parseClassDeclaration();
     	case ENUM:
-    		parseEnumDeclaration();
-    		break;
+    		return parseEnumDeclaration();
     	case TYPE:
-    		parseAliasDeclaration();
-    		break;
+    		return parseAliasDeclaration();
     	case FUNC:
-    		parseFunctionDeclaration();
-    		break;
+    		return parseFunctionDeclaration();
     	case CONST:
-    		parseConstantDeclaration();
-    		break;
+    		return parseConstantDeclaration();
     	case LET:
-    		parseVariableDeclaration();
-    		break;
+    		return parseVariableDeclaration();
     	case EXPORT:
-    		parseExportDeclaration();
-    		break;
+    		return parseExportDeclaration();
     	default:
     		throw new ParsingException(
     				"only declaration statements can be placed in top environment");
@@ -345,34 +343,39 @@ public class SingleFileParser {
         expect(Keyword.FOR);
     }
     
-    private void parseStatementBlock() throws Exception {
-        expect(Punctuator.LBRACE);
-        
-        expect(Punctuator.RBRACE);
-    }
-    
     private Statement parseStatement() throws Exception {
         switch (lex_.currentTag()) {
+        case CONST:
+        	return parseConstantDeclaration();
+        case LET:
+        	return parseVariableDeclaration();
         case DO:
             return parseDoWhileLoop();
         case FOR:
-            return parseForLoop();
+        	return null;
+            // return parseForLoop();
         case IF:
             return parseIfStatement();
         case WHILE:
             return parseWhileLoop();
         case LBRACE:
-            return parseStatementBlock();
+            return parseStatementBlock(Punctuator.RBRACE);
         default:
-            // TODO: report error unrecognized token
-        	return null;
+            return parseExpressionStatement();
         }
     }
     
-    private void parseStatements(Token endToken) throws Exception {
-    	while (lex_.current() != endToken) {
-    		parseStatement();
+    private StatementBlock parseStatementBlock(Token endToken) throws Exception {
+    	ArrayList<Statement> stmts = new ArrayList<Statement>();
+    	while (!lex_.advance(endToken)) {
+    		stmts.add(parseStatement());
     	}
+    	return astNode_.createStatementBlock(stmts);
+    }
+    
+    private ExpressionStatement parseExpressionStatement() throws Exception {
+    	Expression expr = parseExpression();
+    	return astNode_.createExpressionStmt(expr);
     }
     
     // Parsing routines about expression

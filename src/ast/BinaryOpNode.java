@@ -4,12 +4,14 @@ import type.Type;
 
 public class BinaryOpNode extends Expression {
 
-	public BinaryOpNode(Expression lhs, Expression rhs) {
+	public BinaryOpNode(BinaryOperator op, Expression lhs, Expression rhs) {
+		op_ = op;
 		lhs_ = lhs;
 		rhs_ = rhs;
 	}
 	
-	private Expression lhs_, rhs_;
+	private final BinaryOperator op_;
+	private final Expression lhs_, rhs_;
 
 	@Override
 	public Type getType() {
