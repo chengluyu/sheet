@@ -33,6 +33,7 @@ public class Keyword extends Token {
 	
 	static {
 		reserve("as", Keyword.AS);
+		reserve("bool", Keyword.BOOL);
 		reserve("break", Keyword.BREAK);
 		reserve("byte", Keyword.BYTE);
 		reserve("catch", Keyword.CATCH);
@@ -76,6 +77,7 @@ public class Keyword extends Token {
 	}
 	
 	public static final Keyword AS = new Keyword(Tag.AS, "as");
+	public static final Keyword BOOL = new Keyword(Tag.BOOL, "bool");
 	public static final Keyword BREAK = new Keyword(Tag.BREAK, "break");
 	public static final Keyword BYTE = new Keyword(Tag.BYTE, "byte");
 	public static final Keyword CATCH = new Keyword(Tag.CATCH, "catch");

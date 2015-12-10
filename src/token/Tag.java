@@ -67,6 +67,7 @@ public enum Tag {
 	
 	// Reserved words
 	AS,
+	BOOL,
 	BREAK,
 	BYTE,
 	CATCH,
