@@ -69,8 +69,7 @@ public final class Token {
 	}
 
 	static {
-		Tag[] values = Tag.values();
-		for (Tag tag : values) {
+		for (Tag tag : Tag.values()) {
 			if (tag.type() != TokenType.LITERAL &&
 				tag.type() != TokenType.IDENTIFIER) {
 
