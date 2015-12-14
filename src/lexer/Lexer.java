@@ -1,551 +1,415 @@
 package lexer;
 
 import text.Scanner;
-import text.RawStream;
-import token.*;
-import utils.LexicalException;
+import utils.LexicalError;
+import utils.Position;
 
-public final class Lexer {
-	
-	public Lexer(RawStream stream) throws LexicalException {
-		initialize(stream);
+public class Lexer {
+
+	public Lexer(Scanner scan) {
+		scan_ = scan;
+		row_ = 1;
+		column_ = 1;
+		ignore();
 	}
-	
-	public boolean advance(Token tok) throws LexicalException {
-		if (current_ == tok) {
-			advance();
+
+	private Scanner scan_;
+
+	// Position records
+
+	private int row_;
+	private int column_;
+
+	public Position position() {
+		return new Position(row_, column_);
+	}
+
+	// Helper functions of stream operations.
+
+	private char peek;
+
+	private char next() {
+		char save = peek;
+		ignore();
+		return save;
+	}
+
+	private boolean match(char ch) {
+		if (peek == ch) {
+			ignore();
 			return true;
 		}
 		return false;
 	}
-	
-	public Token current() {
-		return current_;
+
+	private void expect(char ch) throws LexicalError {
+		if (peek == ch)
+			ignore();
+		else
+			throw new LexicalError(position(),
+					String.format("expect '%c' instead of '%c'", ch, peek));
+	}
+
+	private void ignore() {
+		peek = scan_.advance();
+		if (peek == '\n') {
+			row_++;
+			column_ = 0;
+		}
+		column_++;
+	}
+
+	private Token select(Tag tokenTag) {
+		return Token.get(tokenTag);
 	}
 	
-	public Tag currentTag() {
-		return current_.getTag();
+	private Token select(char cond, Tag then, Tag otherwise) {
+		return Token.get(match(cond) ? then : otherwise);
 	}
-	
-	public Token advance() throws LexicalException {
-		Token save = current_;
-		scan();
-		return save;
+
+	private boolean isBinDigit() {
+		return peek == '0' || peek == '1';
 	}
-	
-	private Scanner scan_;
-	private boolean eos_;
-	private Token current_;
-	
-	private void initialize(RawStream stream) throws LexicalException {
-		scan_ = new Scanner(stream);
-		eos_ = false;
-		current_ = null;
-		scan();
+
+	private boolean isOctDigit() {
+		return '0' <= peek && peek <= '7';
 	}
-	
-	private void scan() throws LexicalException {
-		if (eos_) return;
-		
-		Token token = null;
-		
-		do {
-			switch (scan_.peek()) {
-			
-			// End of source
+
+	private boolean isDigit() {
+		return '0' <= peek && peek <= '9';
+	}
+
+	private boolean isHexDigit() {
+		return isDigit() || ('A' <= peek && peek <= 'F') ||
+				('a' <= peek && peek <= 'f');
+	}
+
+	private boolean isIdentifierStart() {
+		return Character.isJavaIdentifierStart(peek);
+	}
+
+	private boolean isIdentifierPart() {
+		return Character.isJavaIdentifierPart(peek);
+	}
+
+	private String scanBinDigits() {
+		StringBuilder sb = new StringBuilder();
+		while (isBinDigit())
+			sb.append(next());
+		return sb.toString();
+	}
+
+	private String scanOctDigits() {
+		StringBuilder sb = new StringBuilder();
+		while (isOctDigit())
+			sb.append(next());
+		return sb.toString();
+	}
+
+	private String scanDigits() throws LexicalError {
+		StringBuilder sb = new StringBuilder();
+		while (isDigit())
+			sb.append(next());
+
+		String str = sb.toString();
+		if (str.equals(""))
+			throw new LexicalError(position(), "expect decimal digits");
+		return str;
+	}
+
+	private String scanDigits(char firstChar) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(firstChar);
+		while (isDigit())
+			sb.append(next());
+		return sb.toString();
+	}
+
+	private String scanHexDigits() {
+		StringBuilder sb = new StringBuilder();
+		while (isHexDigit())
+			sb.append(next());
+		return sb.toString();
+	}
+
+	private String scanIdentifier(char firstChar) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(firstChar);
+		while (isIdentifierPart())
+			sb.append(next());
+		return sb.toString();
+	}
+
+	// Scan routines
+
+	private Token scan() throws LexicalError {
+		char save;
+		while (true) {
+			switch (save = next()) {
+			// End of file
 			case Scanner.EOF:
-				token = Token.EOS;
-				eos_ = true;
-				break;
-				
-			// Single-character punctuators
-			case '(':
-				scan_.ignore();
-				token = Punctuator.LPAREN;
-				break;
-			case ')':
-				scan_.ignore();
-				token = Punctuator.RPAREN;
-				break;
-			case '[':
-				scan_.ignore();
-				token = Punctuator.LBRACK;
-				break;
-			case ']':
-				scan_.ignore();
-				token = Punctuator.RBRACK;
-				break;
-			case '{':
-				scan_.ignore();
-				token = Punctuator.LBRACE;
-				break;
-			case '}':
-				scan_.ignore();
-				token = Punctuator.RBRACE;
-				break;
-			case ':':
-				scan_.ignore();
-				token = Punctuator.COLON;
-				break;
-			case ';':
-				scan_.ignore();
-				token = Punctuator.SEMICOLON;
-				break;
-			case '?':
-				scan_.ignore();
-				token = Punctuator.CONDITIONAL;
-				break;
-			case '.': // . ... number-start-with-period
-				scan_.ignore();
-				if (scan_.match('.')) {
-					if (scan_.peek() == '.') {
-						scan_.ignore();
-						token = Punctuator.ELLIPSIS;
-					} else {
-						throw new LexicalException("Expected a period instead of " + scan_.peek());
-					}
-				} else if (Character.isDigit(scan_.peek()))
-					token = scanFloatingPointNumber("0");
-				else
-					token = Punctuator.PERIOD;
-				break;
-				
-			// Single-character unary operators
-			case '~':
-				scan_.ignore();
-				token = UnaryOp.BIT_NOT;
-				break;
-				
-			case '!': // ! !=
-				scan_.ignore();
-				if (scan_.match('='))
-					token = ComparisionOp.NE;
-				else
-					token = UnaryOp.NOT;
-				break;
-				
-			case '=': // = => ==
-				scan_.ignore();
-				if (scan_.match('='))
-					token = ComparisionOp.EQ;
-				else if (scan_.match('>'))
-					token = Punctuator.LAMBDA_ARROW;
-				else
-					token = AssignmentOp.ASSIGN;
-				break;
-				
-			case '<': // < <= << <<=
-				scan_.ignore();
-				if (scan_.match('<')) {
-					if (scan_.peek() == '=')
-						token = AssignmentOp.SHL;
-					else
-						token = BinaryOp.SHL;
-				} else if (scan_.match('='))
-					token = ComparisionOp.LTE;
-				else
-					token = ComparisionOp.LT;
-				break;
-				
-			case '>': // > >= >> >>=
-				scan_.ignore();
-				if (scan_.match('>')) {
-					if (scan_.peek() == '=')
-						token = AssignmentOp.SHR;
-					else
-						token = BinaryOp.SHR;
-				} else if (scan_.match('='))
-					token = ComparisionOp.GTE;
-				else
-					token = ComparisionOp.GT;
-				break;
-				
-			case '+': // + ++ +=
-				scan_.ignore();
-				if (scan_.match('+'))
-					token = Punctuator.INC;
-				else if (scan_.match('='))
-					token = AssignmentOp.ADD;
-				else
-					token = BinaryOp.ADD;
-				break;
-				
-			case '-': // - -- -=
-				scan_.ignore();
-				if (scan_.match('-'))
-					token = Punctuator.DEC;
-				else if (scan_.match('='))
-					token = AssignmentOp.SUB;
-				else if (scan_.match('>'))
-					token = Punctuator.RETURN_ARROW;
-				else
-					token = BinaryOp.SUB;
-				break;
-				
-			case '*': // * *=
-				scan_.ignore();
-				if (scan_.match('='))
-					token = AssignmentOp.MUL;
-				else
-					token = BinaryOp.MUL;
-				break;
-			
-			case '/': // / /= // /*
-				scan_.ignore();
-				if (scan_.match('='))
-					token = AssignmentOp.MUL;
-				else if (scan_.match('/')) {
-					skipSingleLineComment(true);
-					token = Token.SINGLE_LINE_COMMENT;
-				} else if (scan_.match('*')) {
-					skipMultipleLineComment(true);
-					token = Token.MULTIPLE_LINE_COMMENT;
-				} else
-					token = BinaryOp.DIV;
-				break;
-				
-			case '%': // % %=
-				scan_.ignore();
-				if (scan_.match('='))
-					token = AssignmentOp.MOD;
-				else
-					token = BinaryOp.MOD;
-				break;
-				
-			// Whitespace
+				return select(Tag.EOS);
+
+			// Whitespaces
 			case '\n':
-			case ' ':
 			case '\t':
 			case '\r':
-				scan_.ignore();
-				token = Token.WHITESPACE;
+			case ' ':
 				break;
+
+			// Single character operators
+			case '(':
+				return select(Tag.LPAREN);
+			case ')':
+				return select(Tag.RPAREN);
+			case '[':
+				return select(Tag.LBRACK);
+			case ']':
+				return select(Tag.RBRACK);
+			case '{':
+				return select(Tag.LBRACE);
+			case '}':
+				return select(Tag.RBRACE);
+			case ':':
+				return select(Tag.COLON);
+			case ';':
+				return select(Tag.SEMICOLON);
+			case '?':
+				return select(Tag.CONDITIONAL);
+			case '~':
+				return select(Tag.BIT_NOT);
+
+			case '.': // . ... number-start-with-period
+				if (match('.')) {
+					if (match('.'))
+						return select(Tag.ELLIPSIS);
+					else
+						throw new LexicalError(position(), 
+								"expect a period instead of " + peek);
+				} else if (isDigit())
+					return scanIntegerOrNumber('0');
+				else
+					return select(Tag.PERIOD);
 				
-			// String and character literals
-			case '"':
-				scan_.ignore();
-				token = scanStringLiteral();
-				break;
-			case '\'':
-				scan_.ignore();
-				token = scanCharLiteral();
-				break;
+			case '!': // ! !=
+				return select('=', Tag.NOT, Tag.NE);
+				
+			case '=': // = ==
+				return select('=', Tag.ASSIGN, Tag.EQ);
+				
+			case '<': // < <= << <<=
+				return match('<')
+						? select('=', Tag.SHL, Tag.ASSIGN_SHL)
+						: select('=', Tag.LTE, Tag.LT);
+				
+			case '>': // > >= >> >>= >>> >>>=
+				if (match('>'))
+					return match('>')
+							? select('=', Tag.ASSIGN_SAR, Tag.SAR)
+							: select('=', Tag.ASSIGN_SHR, Tag.SHR);
+				else
+					return select('=', Tag.GT, Tag.GTE);
+				
+			case '+': // + ++ +=
+				return match('+')
+						? select(Tag.INC)
+						: select('=', Tag.ASSIGN_ADD, Tag.ADD);
+				
+			case '-': // - -- -=
+				return match('-')
+						? select(Tag.DEC)
+						: select('=', Tag.ASSIGN_SUB, Tag.SUB);
+				
+			case '*': // * *=
+				return select('=', Tag.MUL, Tag.ASSIGN_MUL);
 			
+			case '/': // / /= // /*
+				if (match('='))
+					return select(Tag.ASSIGN_DIV);
+				else if (match('/'))
+					skipSingleLineComment();
+				else if (match('*'))
+					skipMultipleLineComment();
+				else
+					return select(Tag.DIV);
+				
+			case '%': // % %=
+				return select('=', Tag.MOD, Tag.ASSIGN_MOD);
+
 			// Literals
-			default:
-				if (Character.isJavaIdentifierStart(scan_.peek())) {
-					token = scanIdentifierOrKeyword();
-				} else if (Character.isDigit(scan_.peek())) {
-					token = scanNumber();
-				} else {
-					throw new LexicalException("unrecognized character: " + scan_.peek());
-				}
-				break;
-			}
-		} while (token == Token.WHITESPACE ||
-				token == Token.SINGLE_LINE_COMMENT ||
-				token == Token.MULTIPLE_LINE_COMMENT);
-		
-		current_ = token;
-	}
-	
-	private void skipSingleLineComment(boolean noPrefix) {
-		if (!noPrefix) {
-			scan_.match('/');
-			scan_.match('/');	
-		}
-		
-		while (!scan_.match('\n')) {
-			scan_.ignore();
-		}
-	}
-	
-	private void skipMultipleLineComment(boolean noPrefix) {
-		if (!noPrefix) {
-			scan_.match('/');
-			scan_.match('*');	
-		}
-		
-		int cascade = 1;
-		
-		while (true) {
-			if (scan_.match('/') && scan_.peek() == '*') {
-				scan_.ignore();
-				cascade++;
-			} else if (scan_.match('*') && scan_.peek() == '/') {
-				scan_.ignore();
-				cascade--;
-				if (cascade == 0) break;
-			} else {
-				scan_.ignore();
-			}
-		}
-	}
-	
-	private void skipWhiteSpace() {
-		while (Character.isWhitespace(scan_.peek()))
-			scan_.ignore();
-	}
-	
-	private int scanCharEscapeeCodePoint(int maxValue) throws LexicalException {
-		int codepoint = Integer.parseInt(scanHexidecimalInteger());
-		if (codepoint > maxValue) {
-			throw new LexicalException("invaild Unicode code point");
-		}
-		return codepoint;
-	}
-	
-	private StringValue scanStringLiteral() throws LexicalException {
-		StringBuilder sb = new StringBuilder();
-		
-		do {
-			if (scan_.match('\\')) {
-				switch (scan_.peek()) {
-				case '\n':
-					scan_.ignore();
-					skipWhiteSpace();
-					break;
-				case 'n':
-					scan_.ignore();
-					sb.append('\n');
-					break;
-				case 't':
-					scan_.ignore();
-					sb.append('\t');
-					break;
-				case 'r':
-					scan_.ignore();
-					sb.append('\r');
-					break;
-				case 'u':
-					scan_.ignore();
-					if (scan_.match('{')) {
-						int codepoint = scanCharEscapeeCodePoint(0x10FFFF);
-						sb.append(Character.lowSurrogate(codepoint));
-						sb.append(Character.highSurrogate(codepoint));
-						if (!scan_.match('}'))
-							throw new LexicalException("missing right brace in an Unicode escapee");
-					} else {
-						throw new LexicalException("invaild Unicode escapee character");
-					}
-				default:
-					throw new LexicalException(String.format(
-							"unknown escapee character '%c'", scan_.next()));
-				}
-			} else {
-				sb.append(scan_.next());
-			}
-		} while (scan_.match('"'));
-		
-		return new StringValue(sb.toString());
-	}
-	
-	private CharValue scanCharLiteral() throws LexicalException {
-		char ch;
-		
-		if (scan_.match('\\')) {
-			switch (scan_.peek()) {
-			case 'n':
-				scan_.ignore();
-				ch = '\n';
-				break;
-			case 't':
-				scan_.ignore();
-				ch = '\t';
-				break;
-			case 'r':
-				scan_.ignore();
-				ch = '\r';
-				break;
-			case 'x':
-				scan_.ignore();
-				int codepoint = scanCharEscapeeCodePoint(0xFFFF);
-				ch = (char) codepoint;
-				break;
-			default:
-				throw new LexicalException(String.format(
-						"unknown escapee character '%c'", scan_.next()));
-			}
-		} else if (scan_.match('\n'))
-			throw new LexicalException("invaild char constant");
-		else
-			ch = scan_.next();
-		
-		if (!scan_.match('\''))
-			throw new LexicalException("invaild character literal");
-		
-		return new CharValue(ch); 
-	}
-	
-	private Token scanIdentifierOrKeyword() {
-		if (!Character.isJavaIdentifierStart(scan_.peek()))
-			return null;
-		
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append(scan_.next());
-		
-		while (Character.isJavaIdentifierPart(scan_.peek())) {
-			sb.append(scan_.next());
-		}
-		
-		String word = sb.toString();
-		
-		if (Keyword.isKeyword(word))
-			return Keyword.getKeywordToken(word);
-		
-		return new Identifier(word);
-	}
-	
-	private Token scanNumber() throws LexicalException {
-		scan_.match('0');
-		
-		String literal;
-		
-		switch (scan_.peek()) {
-		case 'x':
-			scan_.ignore();
-			literal = scanHexidecimalInteger();
-			break;
-		case 'o':
-			scan_.ignore();
-			literal = scanOctalInteger();
-			break;
-		case 'b':
-			scan_.ignore();
-			literal = scanBinaryInteger();
-			break;
-		default:
-			if (Character.isDigit(scan_.peek()))
-				literal = scanDecimalInteger(true);
-			else
-				literal = "0";
+			case '0':
+				if (match('x'))
+					return Token.literal(scanHexDigits());
+				if (match('o'))
+					return Token.literal(scanOctDigits());
+				if (match('b'))
+					return Token.literal(scanBinDigits());
+				return scanIntegerOrNumber('0');
+			case '"':
+				return scanStringLiteral();
+			case '\'':
+				return scanCharLiteral();
 			
-			char c = scan_.peek();
-			if (c == '.' || c == 'e' || c == 'E' || c == 'f')
-				return scanFloatingPointNumber(literal);
-			break;
-		}
-		IntegerValue.Type type = scanIntegerType();
-		
-		return new IntegerValue(literal, type);
-	}
-	
-	private String scanHexidecimalInteger() {
-		StringBuilder sb = new StringBuilder();
-		if (isHexidecimalDigit(scan_.peek())) {
-			do {
-				sb.append(scan_.next());
-			} while (isHexidecimalDigit(scan_.peek()));
-		}
-		return sb.toString();
-	}
-	
-	private String scanOctalInteger() {
-		StringBuilder sb = new StringBuilder();
-		if (isOctalDigit(scan_.peek())) {
-			do {
-				sb.append(scan_.next());
-			} while (isOctalDigit(scan_.peek()));
-		}
-		return sb.toString();
-	}
-	
-	private String scanBinaryInteger() {
-		StringBuilder sb = new StringBuilder();
-		if (isBinaryDigit(scan_.peek())) {
-			do {
-				sb.append(scan_.next());
-			} while (isBinaryDigit(scan_.peek()));
-		}
-		return sb.toString();
-	}
-	
-	private IntegerValue.Type scanIntegerType() throws LexicalException {
-		// i8, i16, i32, i64, u8, u16, u32, u64
-		if (scan_.peek() == 'i') {
-			int size = Integer.parseInt(scanDecimalInteger(false));
-			switch (size) {
-			case 8: return IntegerValue.Type.int8;
-			case 16: return IntegerValue.Type.int16;
-			case 32: return IntegerValue.Type.int32;
-			case 64: return IntegerValue.Type.int64;
-			default: throw new LexicalException("invaild integer suffix");
+			default:
+				if (isIdentifierStart())
+					return scanIdentifierOrKeyword(save);
+				if (isDigit())
+					return scanIntegerOrNumber(save);
+				throw new LexicalError(position(),
+						String.format("unrecognized character '%c'", save));
 			}
-		} else if (scan_.peek() == 'u') {
-			int size = Integer.parseInt(scanDecimalInteger(false));
-			switch (size) {
-			case 8: return IntegerValue.Type.uint8;
-			case 16: return IntegerValue.Type.uint16;
-			case 32: return IntegerValue.Type.uint32;
-			case 64: return IntegerValue.Type.uint64;
-			default: throw new LexicalException("invaild integer suffix");
-			}
-		} else return IntegerValue.Type.int32; // default integer type
+		}
 	}
-	
-	private NumberValue.Type scanNumberType() throws LexicalException {
-		// i8, i16, i32, i64, u8, u16, u32, u64
-		if (scan_.peek() == 'f') {
-			int size = Integer.parseInt(scanDecimalInteger(false));
-			if (size == 32)
-				return NumberValue.Type.float32;
-			else if (size == 64)
-				return NumberValue.Type.float64;
+
+	// Comments
+
+	private void skipSingleLineComment() {
+		while (peek != '\n' && peek != Scanner.EOF) ignore();
+		if (peek == '\n') ignore();
+	}
+
+	private void skipMultipleLineComment() throws LexicalError {
+		int cascade = 1;
+		while (cascade > 0) {
+			if (peek == '/') {
+				ignore();
+				if (match('*')) cascade++;
+			} else if (peek == '*') {
+				ignore();
+				if (match('/')) cascade--;
+			} else if (peek == Scanner.EOF) {
+				throw new LexicalError(position(), 
+						String.format("unexpected EOF in multi-line comment"));
+			} else {
+				ignore();
+			}
+		}
+	}
+
+	// Integer or number literal
+
+	private Token scanIntegerOrNumber(char firstChar) throws LexicalError {
+		String integer = scanDigits(firstChar), fraction = "", exponent = "";
+
+		if (match('.'))
+			fraction = scanDigits();
+
+		if (match('e') || match('E')) {
+			if (peek == '+' || peek == '-')
+				exponent = next() + scanDigits();
 			else
-				throw new LexicalException("invaild number suffix");
-		} else return NumberValue.Type.float64; // default number type;
+				exponent = scanDigits();
+		}
+
+		if (fraction.equals("") && exponent.equals(""))
+			return Token.literal(Integer.parseInt(integer));
+		return Token.literal(Double.parseDouble(integer + fraction + exponent));
 	}
-	
-	private String scanDecimalInteger(boolean nullable) throws LexicalException {
+
+	// String literal
+
+	private Token scanStringLiteral() throws LexicalError {
 		StringBuilder sb = new StringBuilder();
-		if (isDecimalDigit(scan_.peek())) {
-			do {
-				sb.append(scan_.next());
-			} while (isDecimalDigit(scan_.peek()));
-		} else if (!nullable) {
-			throw new LexicalException("expect a dicimal integer");
+		while (!match('"')) {
+			if (peek == '\\')
+				scanStringEscape(sb);
+			else
+				sb.append(next());
 		}
-		return sb.toString();
+		return Token.literal(sb.toString());
 	}
-	
-	private NumberValue scanFloatingPointNumber(String intPart) throws LexicalException {
-		// fraction part
-		StringBuilder sb = new StringBuilder();
-		if (scan_.match('.')) {
-			sb.append('.');
-			sb.append(scanDecimalInteger(false));
+
+	private void scanStringEscape(StringBuilder sb) throws LexicalError {
+		// pre-condition: peek == '\\'
+		expect('\\');
+		char save = next();
+		int codepoint;
+		switch (save) {
+		case 'n':
+			sb.append('\n');
+			break;
+		case 'r':
+			sb.append('\r');
+			break;
+		case 't':
+			sb.append('\t');
+			break;
+		case '"':
+			sb.append('"');
+			break;
+		case '\\':
+			sb.append('\\');
+			break;
+		case 'u':
+			// Scan Unicode string escape.
+			// Range: [0,0x10FFFF]
+			// Examples: \uC0DE \uDEAD \u10FFFF
+			codepoint = Integer.parseInt(scanHexDigits());
+			if (codepoint > 0xFFFF) {
+				sb.append(Character.highSurrogate(codepoint));
+				sb.append(Character.lowSurrogate(codepoint));
+			} else {
+				sb.append((char) codepoint);
+			}
+		default:
+			throw new LexicalError(position(), String.format(
+					"unrecognized character '%c' in character escape", save));
 		}
-		// exponent part
-		if (scan_.match('e') || scan_.match('E')) {
-			sb.append('E');
-			if (scan_.peek() == '+' || scan_.peek() == '-')
-				sb.append(scan_.next());
-			sb.append(scanDecimalInteger(false));
+	}
+
+	// Character literal
+
+	private Token scanCharLiteral() throws LexicalError {
+		char ch = '\0';
+
+		if (peek == '\\') // character escape
+			ch = scanCharEscape();
+		else if (peek == '\n' || peek == '\'') // illegal characters
+			throw new LexicalError(position(), 
+					String.format("invaild character literal"));
+		else
+			ch = next();
+
+		expect('\'');
+		return Token.literal(ch);
+	}
+
+	private char scanCharEscape() throws LexicalError {
+		// pre-condition: peek == '\\'
+		int codepoint;
+		expect('\\');
+		char save = next();
+		switch (save) {
+		case 'n':
+			return '\n';
+		case 'r':
+			return '\r';
+		case 't':
+			return '\t';
+		case '\'':
+			return '\'';
+		case '\\':
+			return '\\';
+		case 'u':
+			// Scan Unicode character escape.
+			// Range: [0,0xFFFF]
+			// Examples: \uC0DE \uDEAD
+			codepoint = Integer.parseInt(scanHexDigits());
+			if (codepoint > 0xFFFF)
+				throw new LexicalError(position(), String.format(
+						"character escapee exceeds the limit of UTF16"));
+			else
+				return (char) codepoint;
+		default:
+			throw new LexicalError(position(), String.format(
+					"unrecognized character '%c' in character escape", save));
 		}
-		// number suffix
-		NumberValue.Type type = scanNumberType();
-		return new NumberValue(sb.toString(), type);
 	}
-	
-	// some helper functions
-	
-	private static boolean isDecimalDigit(char ch) {
-		return '0' <= ch && ch <= '9';
+
+	private Token scanIdentifierOrKeyword(char firstChar) {
+		String id = scanIdentifier(firstChar);
+		return Token.isKeyword(id) ?
+				Token.getKeywordToken(id) : Token.identifier(id);
 	}
-	
-	private static boolean isBinaryDigit(char ch) {
-		return ch == '0' || ch == '1';
-	}
-	
-	private static boolean isOctalDigit(char ch) {
-		return '0' <= ch && ch <= '7';
-	}
-	
-	private static boolean isHexidecimalDigit(char ch) {
-		return ('0' <= ch && ch <= '9') ||
-				('A' <= ch && ch <= 'F') ||
-				('a' <= ch && ch <= 'f');
-	}
-	
+
 }

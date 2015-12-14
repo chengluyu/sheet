@@ -1,35 +1,19 @@
 package test;
 
-import java.util.ArrayList;
-
 public abstract class TestUnit {
-	
-	public TestUnit(String testName) {
-		testName_ = testName;
-		logger_ = new StringBuilder();
+
+	public TestUnit(String testUnitName) {
+		testUnitName_ = testUnitName;
 	}
 
+	private String testUnitName_;
+
+	public String name() {
+		return testUnitName_;
+	}
+
+	public abstract void input(Object obj);
 	public abstract void run();
-	
-	public void report() {
-		System.out.print(String.format("Running test on %s:\n", testName_));
-		System.out.print(logger_.toString());
-	}
-	
-	protected void fail() {
-		log("Failed.");
-	}
-	
-	protected void success() {
-		log("Success.");
-	}
-	
-	protected void log(String message) {
-		logger_.append(message);
-		logger_.append('\n');
-	}
-	
-	private final String testName_;
-	private StringBuilder logger_;
+	public abstract TestResult result();
 
 }
