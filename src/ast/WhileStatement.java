@@ -1,6 +1,6 @@
 package ast;
 
-public class WhileStatement extends Statement {
+public class WhileStatement extends IterationStatement {
 
 	public WhileStatement() {
 		// TODO Auto-generated constructor stub

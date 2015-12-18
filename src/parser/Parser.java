@@ -17,13 +17,21 @@ public class Parser {
 	private void initialize(Lexer lex) {
 		peek = null;
 		lex_ = lex;
+		
 		astNodeFactory_ = new AstNodeFactory();
 		scope_ = new ScopeManager(this);
+		
+		lowestBreakable = null;
+		lowestIteration = null;
+		
 		advance();
 	}
 
 	private AstNodeFactory astNodeFactory_;
 	private ScopeManager scope_;
+	
+	private BreakableStatement lowestBreakable;
+	private IterationStatement lowestIteration;
 
 	// Lexical fields and functions
 
@@ -107,14 +115,14 @@ public class Parser {
 	
 	// Constant declarations
 	
-	private Initialization parseConstantDeclaration() throws SyntaxError {
-		ArrayList<Initialization> group = new ArrayList<Initialization>();
+	private ExpressionGroup parseConstantDeclaration() throws SyntaxError {
+		ArrayList<Expression> group = new ArrayList<Expression>();
 		expect(Tag.CONST);
 		group.add(parseSingleConstantDeclaration());
 		while (match(Tag.COMMA)) {
 			group.add(parseSingleConstantDeclaration());
 		}
-		return astNodeFactory_.newConstantInitializationGroup(group);
+		return astNodeFactory_.newExpressionGroup(group);
 	}
 
 	private Assignment parseSingleConstantDeclaration() throws SyntaxError {
@@ -124,19 +132,19 @@ public class Parser {
 		expect(Tag.ASSIGN);
 		Expression expr = parseExpression();
 		scope_.current().defineConstant(id);
-		return astNodeFactory_.newConstantInitialization(id, expr);
+		return astNodeFactory_.newAssignment(Tag.INIT_CONST, id, expr);
 	}
 	
 	// Variable declarations
 
-	private InitializationGroup parseVariableDeclaration() throws SyntaxError {
-		ArrayList<Initialization> group = new ArrayList<Initialization>();
+	private ExpressionGroup parseVariableDeclaration() throws SyntaxError {
+		ArrayList<Expression> group = new ArrayList<Expression>();
 		expect(Tag.LET);
 		group.add(parseSingleVariableDeclaration());
 		while (match(Tag.COMMA)) {
 			group.add(parseSingleVariableDeclaration());
 		}
-		return astNodeFactory_.newVariableInitializationGroup(group);
+		return astNodeFactory_.newExpressionGroup(group);
 	}
 
 	private Assignment parseSingleVariableDeclaration() throws SyntaxError {
@@ -147,7 +155,7 @@ public class Parser {
 		if (match(Tag.ASSIGN))
 			expr = parseExpression();
 		scope_.current().defineVariable(id);
-		return astNodeFactory_.newVariableInitialization(id, expr);
+		return astNodeFactory_.newAssignment(Tag.INIT_LET, id, expr);
 	}
 
 	private void parseForEachVariableDeclaration(Scope loopScope) {
@@ -196,13 +204,8 @@ public class Parser {
 
 	// Parse statements
 	// Statements will not modify the context
-
-	private Statement parseStatement() {
-		return parseStatement(true);
-	}
 	
-	private Statement parseStatement(boolean canCreateNewScope)
-			throws SyntaxError {
+	private Statement parseStatement() throws SyntaxError {
 		// Statement ::
 		//	BreakStatement |
 		//	ContinueStatement |
@@ -228,7 +231,8 @@ public class Parser {
 		case IF:
 			return parseIfStatement();
 		case LBRACE:
-			return parseStatementBlock(canCreateNewScope);
+			throw new SyntaxError(position(), "cannot create a scope");
+			// TODO improve here
 		case RETURN:
 			return parseReturnStatement();
 		case SWITCH:
@@ -243,39 +247,69 @@ public class Parser {
 	private BreakStatement parseBreakStatement() throws SyntaxError {
 		// BreakStatement ::
 		//	'break' ';'
+		if (lowestBreakable == null)
+			throw new SyntaxError(position(),
+					"break statement outside a breakable scope");
 		expect(Tag.BREAK);
 		expectSemicolon();
-		return astNodeFactory_.newBreakStatement();
+		return astNodeFactory_.newBreakStatement(lowestBreakable);
 	}
 
 	private ContinueStatement parseContinueStatement() throws SyntaxError {
 		// ContinueStatement ::
 		//	'continue' ';'
+		if (lowestIteration == null)
+			throw new SyntaxError(position(),
+					"continue statement outside any iteration");
 		expect(Tag.CONTINUE);
 		expectSemicolon();
-		return astNodeFactory_.newContinueStatement();
+		return astNodeFactory_.newContinueStatement(lowestIteration);
 	}
 
 	private DoWhileStatement parseDoWhileStatement() throws SyntaxError {
 		// DoWhileStatement ::
-		//	'do' Statement 'while' '(' Expression ')' ';'
+		//	'do' LoopBody 'while' '(' Expression ')' ';'
+		DoWhileStatement loop = astNodeFactory_.newDoWhileStatement();
+		
+		// store
+		IterationStatement saveIter = lowestIteration;
+		BreakableStatement saveBreak = lowestBreakable;
+		saveIter = loop;
+		saveBreak = loop;
+		
 		expect(Tag.DO);
 		Statement loopBody = parseStatement();
 		expect(Tag.WHILE);
 		Expression cond = parseParenthesisExpression();
 		expectSemicolon();
-		return astNodeFactory_.newDoWhileStatement(cond, loopBody);
+		
+		// restore
+		lowestIteration = saveIter;
+		lowestBreakable = saveBreak;
+		
+		loop.set(loopBody, cond);
+		return loop;
 	}
 
 	private ForStatement parseForStatement() throws SyntaxError {
 		// ForStatement ::
 		//	'for' '(' (Expression | VariableDeclaration)
-		//	';' Expression ';' Expression ')' Statement
-		enterScope();
+		//	';' Expression ';' Expression ')' LoopBody
+		ForStatement loop = astNodeFactory_.newForStatement();
+		
+		// store
+		IterationStatement saveIter = lowestIteration;
+		BreakableStatement saveBreak = lowestBreakable;
+		saveIter = loop;
+		saveBreak = loop;
+		
+		// scope preparation
+		Scope scope = scope_.newScope();
+		
 		expect(Tag.FOR);
 		expect(Tag.LPAREN);
 		Expression initExpr = null;
-		if (peek().tag() == Tag.LET) {
+		if (peek.tag() == Tag.LET) {
 			initExpr = parseVariableDeclaration();
 		} else {
 			initExpr = parseExpression();
@@ -285,23 +319,28 @@ public class Parser {
 		expectSemicolon();
 		Expression incrExpr = parseExpression();
 		expect(Tag.RPAREN);
-		Statement loopBody = parseStatement(false);
-		return astNodeFactory_.newForStatement(
-				initExpr, condExpr, incrExpr, loopBody, exitScope());
+		Statement loopBody = parseStatement();
+		
+		// restore
+		lowestIteration = saveIter;
+		lowestBreakable = saveBreak;
+		
+		loop.set(initExpr, condExpr, incrExpr, loopBody, scope);
+		return loop;
 	}
 
-	private ForEachStatement parseForEachStatement() throws SyntaxError {
-		enterScope();
-		expect(Tag.FOREACH);
-		expect(Tag.LPAREN);
-		<?> id = parseForEachVariableDeclaration();
-		expect(Tag.IN);
-		Expression expr = parseExpression();
-		expect(Tag.RPAREN);
-		Statement loopBody = parseStatement(false);
-		return astNodeFactory_.newForEachStatement(
-				id, expr, loopBody, exitScope());
-	}
+//	private ForEachStatement parseForEachStatement() throws SyntaxError {
+//		enterScope();
+//		expect(Tag.FOREACH);
+//		expect(Tag.LPAREN);
+//		<?> id = parseForEachVariableDeclaration();
+//		expect(Tag.IN);
+//		Expression expr = parseExpression();
+//		expect(Tag.RPAREN);
+//		Statement loopBody = parseStatement(false);
+//		return astNodeFactory_.newForEachStatement(
+//				id, expr, loopBody, exitScope());
+//	}
 
 	private IfStatement parseIfStatement() {
 		// IfStatement ::
@@ -313,14 +352,6 @@ public class Parser {
 			otherwise = parseStatement();
 		}
 		return astNodeFactory_.newIfStatement(cond, then, otherwise);
-	}
-
-	private StatementBlock parseStatementBlock(boolean canCreateNewScope) {
-		if (canCreateNewScope) enterScope();
-		expect(Tag.LBRACE);
-		
-		expect(Tag.RBRACE);
-		if (canCreateNewScope) exitScope();
 	}
 
 	private ReturnStatement parseReturnStatement() {
@@ -335,18 +366,56 @@ public class Parser {
 	}
 
 	private Statement parseSwitchStatement() {
-		expect(Tag.SWITCH);
-
-		return null;
+		throw new SyntaxError(position(),
+				"unimplemented parsing routine: switch");
 	}
 
-	private WhileStatement parseWhileStatement() {
+	private WhileStatement parseWhileStatement() throws SyntaxError {
 		// WhileStatement ::
-		//	'while' '(' Expression ')' Statement
+		//	'while' '(' Expression ')' LoopBody
+		WhileStatement loop = astNodeFactory_.newWhileStatement();
+		// store
+		IterationStatement saveIter = lowestIteration;
+		BreakableStatement saveBreak = lowestBreakable;
+		saveIter = loop;
+		saveBreak = loop;
+		
 		expect(Tag.WHILE);
 		Expression cond = parseParenthesisExpression();
-		Statement loopBody = parseStatement();
-		return astNodeFactory_.newWhileStatement(cond, loopBody);
+		Statement loopBody = parseLoopBody(null);
+		
+		// restore
+		lowestIteration = saveIter;
+		lowestBreakable = saveBreak;
+		
+		loop.set(cond, loopBody);
+		return loop;
+	}
+	
+	/**
+	 * Parse a body of loop statement.
+	 * @param loopScope The scope where loop body bound to, can be null.
+	 * @return Abstract syntax tree node of loop body statement(s).
+	 * @throws SyntaxError
+	 */
+	private Statement parseLoopBody(Scope loopScope) throws SyntaxError {
+		// LoopBody ::
+		//	Statement |	StatementBlock
+		if (match(Tag.LBRACE))
+			return parseStatementBlock(loopScope);
+		return parseStatement();
+	}
+	
+	private StatementBlock parseStatementBlock(Scope loopScope)
+			throws SyntaxError {
+		// StatementBlock ::
+		//	('{' Statement* '}')
+		ArrayList<Statement> stmts = new ArrayList<Statement>();
+		expect(Tag.LBRACE);
+		while (!match(Tag.RBRACE)) {
+			stmts.add(parseStatement());
+		}
+		return astNodeFactory_.newStatementBlock(stmts, loopScope);
 	}
 
 

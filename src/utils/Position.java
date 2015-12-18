@@ -9,5 +9,9 @@ public class Position {
 
 	public final int row;
 	public final int column;
+	
+	public String toString() {
+		return String.format("at line #%d, column #%d", row, column);
+	}
 
 }
