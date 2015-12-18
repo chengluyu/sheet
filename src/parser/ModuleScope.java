@@ -1,11 +1,9 @@
 package parser;
 
-public class ModuleScope extends Scope {
+public class ModuleScope extends LocalScope {
 
-	public ModuleScope() {
-		super(null);
+	public ModuleScope(ScopeManager sm) {
+		super(sm, null);
 	}
-	
-	private SymbolTable defs_;
 
 }

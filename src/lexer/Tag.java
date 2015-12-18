@@ -17,9 +17,11 @@ public enum Tag {
 	CONDITIONAL("?", TokenType.OPERATOR, Tag.LBP_CONDITIONAL),
 	INC("++", TokenType.OPERATOR, Tag.LBP_UNARY),
 	DEC("--", TokenType.OPERATOR, Tag.LBP_UNARY),
+	POSTFIX_INC("<postfix> ++", TokenType.AST_ONLY),
+	POSTFIX_DEC("<postfix> --", TokenType.AST_ONLY),
 
-	INIT_LET("<init-let>", TokenType.AST_ONLY, Tag.LBP_NONE),
-	INIT_CONST("<init-const>", TokenType.AST_ONLY, Tag.LBP_NONE),
+	INIT_LET("<init-let>", TokenType.AST_ONLY),
+	INIT_CONST("<init-const>", TokenType.AST_ONLY),
 	ASSIGN("=", TokenType.OPERATOR, Tag.LBP_ASSIGNMENT),
 	ASSIGN_BIT_OR("|=", TokenType.OPERATOR, Tag.LBP_ASSIGNMENT),
 	ASSIGN_BIT_XOR("^=", TokenType.OPERATOR, Tag.LBP_ASSIGNMENT),

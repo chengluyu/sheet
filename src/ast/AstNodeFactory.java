@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import lexer.Tag;
 import lexer.Token;
-import parser.Scope;
+import parser.LocalScope;
 import parser.Symbol;
 
 public class AstNodeFactory {
@@ -45,20 +45,44 @@ public class AstNodeFactory {
 	
 	// Expressions
 	
+	public Assignment newAssignment(Tag op, Expression left,
+			Expression right) {
+		return new Assignment(op, left, right);
+	}
 	
 	public BinaryOperation newBinaryOperation(Tag op, Expression left,
 			Expression right) {
 		return new BinaryOperation(op, left, right);
 	}
 
+	public CompareOperation newCompareOperation(Tag op, Expression left,
+			Expression right) {
+		return new CompareOperation(op, left, right);
+	}
+	
 	public Conditional newConditional(Expression cond, Expression then,
 			Expression otherwise) {
 		return new Conditional(cond, then, otherwise);
 	}
 	
-	public CompareOperation newCompareOperation(Tag op, Expression left,
-			Expression right) {
-		return new CompareOperation(op, left, right);
+	public ExpressionGroup newExpressionGroup(ArrayList<Expression> exprs) {
+		return new ExpressionGroup(exprs);
+	}
+	
+	public Index newIndex(Expression obj, Expression index) {
+		return new Index(obj, index);
+	}
+	
+	public Invoke newInvoke(Expression func, ExpressionGroup args) {
+		return new Invoke(func, args);
+	}
+	
+	public Property newProperty(Expression obj, String prop) {
+		return new Property(obj, prop);
+	}
+	
+	public UnaryOperation newUnaryOperation(Tag op, Expression operand) {
+		return new UnaryOperation(op, operand);
 	}
 	
 	// Statements
@@ -75,6 +99,10 @@ public class AstNodeFactory {
 		return new DoWhileStatement();
 	}
 	
+	public ExpressionStatement newExpressionStatement(Expression expr) {
+		return new ExpressionStatement(expr);
+	}
+	
 	public ForStatement newForStatement() {
 		return new ForStatement();
 	}
@@ -89,7 +117,7 @@ public class AstNodeFactory {
 	}
 	
 	public StatementBlock newStatementBlock(ArrayList<Statement> stmts,
-			Scope boundScope) {
+			LocalScope boundScope) {
 		return new StatementBlock(stmts, boundScope);
 	}
 	
