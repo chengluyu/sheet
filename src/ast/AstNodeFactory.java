@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import lexer.Tag;
 import lexer.Token;
+import parser.Scope;
 import parser.Symbol;
 
 public class AstNodeFactory {
@@ -44,6 +45,7 @@ public class AstNodeFactory {
 	
 	// Expressions
 	
+	
 	public BinaryOperation newBinaryOperation(Tag op, Expression left,
 			Expression right) {
 		return new BinaryOperation(op, left, right);
@@ -63,6 +65,36 @@ public class AstNodeFactory {
 	
 	public BreakStatement newBreakStatement(BreakableStatement target) {
 		return new BreakStatement(target);
+	}
+	
+	public ContinueStatement newContinueStatement(IterationStatement target) {
+		return new ContinueStatement(target);
+	}
+	
+	public DoWhileStatement newDoWhileStatement() {
+		return new DoWhileStatement();
+	}
+	
+	public ForStatement newForStatement() {
+		return new ForStatement();
+	}
+	
+	public IfStatement newIfStatement(Expression cond, Statement then,
+			Statement otherwise) {
+		return new IfStatement(cond, then, otherwise);
+	}
+	
+	public ReturnStatement newReturnStatement(Expression ret) {
+		return new ReturnStatement(ret);
+	}
+	
+	public StatementBlock newStatementBlock(ArrayList<Statement> stmts,
+			Scope boundScope) {
+		return new StatementBlock(stmts, boundScope);
+	}
+	
+	public WhileStatement newWhileStatement() {
+		return new WhileStatement();
 	}
 
 }

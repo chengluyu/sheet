@@ -6,7 +6,6 @@ import lexer.*;
 import utils.LexicalError;
 import utils.Position;
 import utils.SyntaxError;
-import utils.UnimplementedError;
 
 public class Parser {
 
@@ -91,7 +90,7 @@ public class Parser {
 	// Parse declarations.
 	// Declarations will modify the context.
 
-	private InitializationGroup parseDeclaration() throws SyntaxError {
+	private void parseDeclaration() throws SyntaxError {
 		// Declaration ::
 		//	ConstantDeclaration |
 		//	FunctionDeclaration |
@@ -166,7 +165,7 @@ public class Parser {
 		loopScope.define(id);
 	}
 
-	private <?> parseImportDeclaration() {
+	private void parseImportDeclaration() throws SyntaxError {
 		// ImportDeclaration ::
 		//	DirectlyImportDeclaration |
 		//	SelectiveImportDeclaration
@@ -192,7 +191,7 @@ public class Parser {
 		}
 	}
 
-	private Initialization parseFunctionDeclaration() throws SyntaxError {
+	private void parseFunctionDeclaration() throws SyntaxError {
 		// FunctionDeclaration ::
 		//	'function' Identifier '(' Arguments ')' '{' Statement* '}'
 		FunctionScope funcScope = scope_.newFunctionScope();
@@ -287,7 +286,7 @@ public class Parser {
 		lowestIteration = saveIter;
 		lowestBreakable = saveBreak;
 		
-		loop.set(loopBody, cond);
+		loop.setup(loopBody, cond);
 		return loop;
 	}
 
@@ -325,7 +324,7 @@ public class Parser {
 		lowestIteration = saveIter;
 		lowestBreakable = saveBreak;
 		
-		loop.set(initExpr, condExpr, incrExpr, loopBody, scope);
+		loop.setup(initExpr, condExpr, incrExpr, loopBody, scope);
 		return loop;
 	}
 
@@ -388,7 +387,7 @@ public class Parser {
 		lowestIteration = saveIter;
 		lowestBreakable = saveBreak;
 		
-		loop.set(cond, loopBody);
+		loop.setup(cond, loopBody);
 		return loop;
 	}
 	
