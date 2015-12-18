@@ -1,13 +1,13 @@
 package ast;
 
-public class Initialization extends AstNode {
+public class Initialization extends Statement {
 
-	public Initialization(LocalReferecne ref, Expression expr) {
+	public Initialization(Reference ref, Expression expr) {
 		ref_ = ref;
 		expr_ = expr;
 	}
 
-	private LocalReferecne ref_;
+	private Reference ref_;
 	private Expression expr_;
 
 }

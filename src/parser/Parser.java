@@ -1,7 +1,12 @@
 
+import java.util.ArrayList;
+
 import ast.*;
 import lexer.*;
+import utils.LexicalError;
+import utils.Position;
 import utils.SyntaxError;
+import utils.UnimplementedError;
 
 public class Parser {
 
@@ -12,25 +17,28 @@ public class Parser {
 	private void initialize(Lexer lex) {
 		peek = null;
 		lex_ = lex;
-		scope_ = new ScopeManager();
 		astNodeFactory_ = new AstNodeFactory();
-
+		scope_ = new ScopeManager(this);
 		advance();
 	}
 
-	private Environment env_;
 	private AstNodeFactory astNodeFactory_;
+	private ScopeManager scope_;
 
 	// Lexical fields and functions
 
 	private Token peek;
 	private Lexer lex_;
+	
+	public Position position() {
+		return lex_.position();
+	}
 
-	private void expect(Tag wish) throws SyntaxError {
+	private Token expect(Tag wish) throws SyntaxError {
 		if (peek.tag() == wish)
-			advance();
+			return next();
 		else
-			throw new SyntaxError(lex_.position(), String.format(
+			throw new SyntaxError(position(), String.format(
 					"expect %s instead of %s", wish.literal(), peek.literal()));
 	}
 
@@ -41,7 +49,7 @@ public class Parser {
 	private String expectIdentifier() throws SyntaxError {
 		if (peek.isIdentifier())
 			return (String) next().data();
-		throw new SyntaxError(lex_.position(), String.format(
+		throw new SyntaxError(position(), String.format(
 				"expect an identifier instead of %s", peek.literal()));
 	}
 
@@ -54,12 +62,12 @@ public class Parser {
 	}
 
 	private Token next() {
-		Token save = peek();
+		Token save = peek;
 		advance();
 		return save;
 	}
 
-	private void advance() {
+	private void advance() throws LexicalError {
 		peek = lex_.advance();
 	}
 
@@ -67,7 +75,7 @@ public class Parser {
 
 	private void parseProgram() {
 		// Program ::
-		//	Delaration*
+		//	Declaration*
 		while (!match(Tag.EOS))
 			parseDeclaration();
 	}
@@ -81,20 +89,24 @@ public class Parser {
 		//	FunctionDeclaration |
 		//	ImportDeclaration |
 		//	VariableDeclaration
-		switch (peek().tag()) {
+		switch (peek.tag()) {
 		case CONST:
 			return parseConstantDeclaration();
 		case FUNCTION:
 			return parseFunctionDeclaration();
 		case IMPORT:
-			return parseImportDeclaration();
+			throw new UnimplementedError(position(), 
+					"unimplemented parsing routine: import");
+			// return parseImportDeclaration();
 		case LET:
 			return parseVariableDeclaration();
 		default:
-			throw new SyntaxError(lex_.position(), "expect declarations");
+			throw new SyntaxError(position(), "expect declarations");
 		}
 	}
-
+	
+	// Constant declarations
+	
 	private Initialization parseConstantDeclaration() throws SyntaxError {
 		ArrayList<Initialization> group = new ArrayList<Initialization>();
 		expect(Tag.CONST);
@@ -105,14 +117,17 @@ public class Parser {
 		return astNodeFactory_.newConstantInitializationGroup(group);
 	}
 
-	private Initialization parseSingleConstantDeclaration() throws SyntaxError {
+	private Assignment parseSingleConstantDeclaration() throws SyntaxError {
 		// SingleConstantDeclaration ::
 		//	Identifier '=' Expression
 		String id = expectIdentifier();
 		expect(Tag.ASSIGN);
 		Expression expr = parseExpression();
+		scope_.current().defineConstant(id);
 		return astNodeFactory_.newConstantInitialization(id, expr);
 	}
+	
+	// Variable declarations
 
 	private InitializationGroup parseVariableDeclaration() throws SyntaxError {
 		ArrayList<Initialization> group = new ArrayList<Initialization>();
@@ -124,13 +139,14 @@ public class Parser {
 		return astNodeFactory_.newVariableInitializationGroup(group);
 	}
 
-	private Initialization parseSingleVariableDeclaration() throws SyntaxError {
+	private Assignment parseSingleVariableDeclaration() throws SyntaxError {
 		// SingleVariableDeclaration ::
 		//	Identifier ('=' Expression)?
-		String id = expectIdentifier;
+		String id = expectIdentifier();
 		Expression expr = null;
 		if (match(Tag.ASSIGN))
 			expr = parseExpression();
+		scope_.current().defineVariable(id);
 		return astNodeFactory_.newVariableInitialization(id, expr);
 	}
 
@@ -151,11 +167,31 @@ public class Parser {
 		expect(Tag.IMPORT);
 
 	}
+	
+	private void parseSingleFunctionArguments() throws SyntaxError {
+		String id = expectIdentifier();
+		FunctionScope fscope = (FunctionScope) scope_.current();
+		fscope.defineArgument(id);
+	}
+	
+	private void parseFunctionArguments() throws SyntaxError {
+		expect(Tag.LPAREN);
+		if (!match(Tag.RPAREN)) {
+			do
+				parseSingleFunctionArguments();
+			while (match(Tag.COMMA));
+			expect(Tag.RPAREN);
+		}
+	}
 
 	private Initialization parseFunctionDeclaration() throws SyntaxError {
+		// FunctionDeclaration ::
+		//	'function' Identifier '(' Arguments ')' '{' Statement* '}'
+		FunctionScope funcScope = scope_.newFunctionScope();
 		expect(Tag.FUNCTION);
 		String funcName = expectIdentifier();
-
+		parseFunctionArguments();
+		
 	}
 
 	// Parse statements
@@ -200,7 +236,7 @@ public class Parser {
 		case WHILE:
 			return parseWhileStatement();
 		default:
-			throw new SyntaxError(lex_.position(), "expect statements");
+			throw new SyntaxError(position(), "expect statements");
 		}
 	}
 
@@ -231,7 +267,7 @@ public class Parser {
 		return astNodeFactory_.newDoWhileStatement(cond, loopBody);
 	}
 
-	private Statement parseForStatement() throws SyntaxError {
+	private ForStatement parseForStatement() throws SyntaxError {
 		// ForStatement ::
 		//	'for' '(' (Expression | VariableDeclaration)
 		//	';' Expression ';' Expression ')' Statement
@@ -254,7 +290,7 @@ public class Parser {
 				initExpr, condExpr, incrExpr, loopBody, exitScope());
 	}
 
-	private Statement parseForEachStatement() throws SyntaxError {
+	private ForEachStatement parseForEachStatement() throws SyntaxError {
 		enterScope();
 		expect(Tag.FOREACH);
 		expect(Tag.LPAREN);
@@ -267,7 +303,7 @@ public class Parser {
 				id, expr, loopBody, exitScope());
 	}
 
-	private Statement parseIfStatement() {
+	private IfStatement parseIfStatement() {
 		// IfStatement ::
 		//	'if' '(' Expression ')' Statement ('else' Statement)?
 		expect(Tag.IF);
@@ -287,7 +323,7 @@ public class Parser {
 		if (canCreateNewScope) exitScope();
 	}
 
-	private Statement parseReturnStatement() {
+	private ReturnStatement parseReturnStatement() {
 		// ReturnStatement ::
 		//	'return' Expression ';'
 		expect(Tag.RETURN);
@@ -304,7 +340,7 @@ public class Parser {
 		return null;
 	}
 
-	private Statement parseWhileStatement() {
+	private WhileStatement parseWhileStatement() {
 		// WhileStatement ::
 		//	'while' '(' Expression ')' Statement
 		expect(Tag.WHILE);
@@ -335,6 +371,7 @@ public class Parser {
 		switch (peek.tag()) {
 		case CHAR_LITERAL:
 		case STRING_LITERAL:
+		case INTEGER:
 		case NUMBER:
 		case NULL_LITERAL:
 		case TRUE_LITERAL:
@@ -351,8 +388,10 @@ public class Parser {
 		case INC:
 		case DEC:
 			return parseUnaryOperation();
+		case IDENTIFIER:
+			return parseReference();
 		default:
-			throw SyntaxError(lex_.position(), "undefined value");
+			throw new SyntaxError(position(), "undefined value");
 		}
 	}
 
@@ -378,9 +417,18 @@ public class Parser {
 	}
 
 	private UnaryOperation parseUnaryOperation() throws SyntaxError {
-		Operator op = (Operator) lex_.advance();
+		Token op = next();
 		Expression expr = parseExpression(op.lbp());
 		return astNodeFactory_.newUnaryOperation(op.tag(), expr);
+	}
+	
+	private Reference parseReference() throws SyntaxError {
+		// Reference :: Identifier
+		String id = expectIdentifier();
+		Symbol symb = scope_.current().find(id);
+		if (symb == null)
+			throw new SyntaxError(position(),  "undefiend reference to " + id);
+		return astNodeFactory_.newReference(symb);
 	}
 
 	private Expression parseLeftDenotation(Expression left) throws SyntaxError {
@@ -394,6 +442,8 @@ public class Parser {
 		case INC:
 		case DEC:
 			return parsePostfixOperation(left);
+		case COMMA:
+			return parseExpressionGroup(left);
 		case LT:
 		case LTE:
 		case GT:
@@ -429,7 +479,7 @@ public class Parser {
 		case ASSIGN_MOD:
 			return parseAssignment(left);
 		default:
-			throw new ParseException(lex_.position(), "missing an operator");
+			throw new SyntaxError(position(), "missing an operator");
 		}
 	}
 
@@ -444,7 +494,7 @@ public class Parser {
 	private Property parseProperty(Expression left) throws SyntaxError {
 		expect(Tag.PERIOD);
 		String property = expectIdentifier();
-		return astNodeFactory_.newProperty(left, property.literal());
+		return astNodeFactory_.newProperty(left, property);
 	}
 
 	private Index parseIndex(Expression left) throws SyntaxError {
@@ -454,26 +504,38 @@ public class Parser {
 		return astNodeFactory_.newIndex(left, index);
 	}
 
-	private <?> parsePostfixOperation(Expression left) throws SyntaxError {
+	private UnaryOperation parsePostfixOperation(Expression left) throws SyntaxError {
 		Token op = next();
-		return astNodeFactory_.<?>(op.tag(), left);
+		return astNodeFactory_.newPostifxOperation(op.tag(), left);
+	}
+	
+	private ExpressionGroup parseExpressionGroup(Expression first)
+			throws SyntaxError {
+		ArrayList<Expression> group = new ArrayList<Expression>();
+		Token comma = expect(Tag.COMMA);
+		
+		group.add(first);
+		while (match(Tag.COMMA)) {
+			group.add(parseExpression(comma.lbp()));
+		}
+		return astNodeFactory_.newExpressionGroup(group);
 	}
 
-	private CompareExpression parseCompareOperation(Expression left)
+	private CompareOperation parseCompareOperation(Expression left)
 			throws SyntaxError {
 		Token op = next();
 		Expression right = parseExpression(op.lbp()); // left associative
 		return astNodeFactory_.newCompareOperation(op.tag(), left, right);
 	}
 
-	private BinaryExpression parseBianryOperation(Expression left)
+	private BinaryOperation parseBianryOperation(Expression left)
 			 throws SyntaxError {
 		Token op = next();
 		Expression right = parseExpression(op.lbp()); // left associative
 		return astNodeFactory_.newBinaryOperation(op.tag(), left, right);
 	}
 
-	private Assignement parseAssignment(Expression left) throws SyntaxError {
+	private Assignment parseAssignment(Expression left) throws SyntaxError {
 		Token op = next();
 		Expression right = parseExpression(op.lbp() - 1); // right associative
 		return astNodeFactory_.newAssignment(op.tag(), left, right);

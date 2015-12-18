@@ -18,6 +18,8 @@ public enum Tag {
 	INC("++", TokenType.OPERATOR, Tag.LBP_UNARY),
 	DEC("--", TokenType.OPERATOR, Tag.LBP_UNARY),
 
+	INIT_LET("<init-let>", TokenType.AST_ONLY, Tag.LBP_NONE),
+	INIT_CONST("<init-const>", TokenType.AST_ONLY, Tag.LBP_NONE),
 	ASSIGN("=", TokenType.OPERATOR, Tag.LBP_ASSIGNMENT),
 	ASSIGN_BIT_OR("|=", TokenType.OPERATOR, Tag.LBP_ASSIGNMENT),
 	ASSIGN_BIT_XOR("^=", TokenType.OPERATOR, Tag.LBP_ASSIGNMENT),
@@ -77,6 +79,7 @@ public enum Tag {
 	FUNCTION("function", TokenType.KEYWORD),
 	IF("if", TokenType.KEYWORD),
 	IMPORT("import", TokenType.KEYWORD),
+	IN("in", TokenType.KEYWORD),
 	LET("let", TokenType.KEYWORD),
 	NEW("new", TokenType.KEYWORD),
 	PRIVATE("private", TokenType.KEYWORD),

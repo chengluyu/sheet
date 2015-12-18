@@ -14,6 +14,10 @@ public class Lexer {
 	}
 
 	private Scanner scan_;
+	
+	public Token advance() throws LexicalError {
+		return scan();
+	}
 
 	// Position records
 

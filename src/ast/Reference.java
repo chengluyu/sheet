@@ -1,7 +1,17 @@
 package ast;
 
-public abstract class Reference {
+import parser.Symbol;
 
-	public abstract boolean solved();
-
+public class Reference extends Literal {
+	
+	public Reference(Symbol symb) {
+		refSymbol_ = symb;
+	}
+	
+	private Symbol refSymbol_;
+	
+	public String name() {
+		return refSymbol_.name();
+	}
+	
 }
