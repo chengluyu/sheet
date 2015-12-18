@@ -3,10 +3,15 @@ package ast;
 public class WhileStatement extends IterationStatement {
 
 	public WhileStatement() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	private Expression cond_;
 	private Statement body_;
+	
+	public void setup(Expression cond, Statement body) {
+		cond_ = cond;
+		body_ = body;
+	}
 
 }

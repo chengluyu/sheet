@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 public class ArrayLiteral extends Literal {
 
-	public ArrayLiteral() {
-		elems_ = new ArrayList<Expression>();
+	public ArrayLiteral(ArrayList<Expression> elems) {
+		elems_ = elems;
 	}
 	
 	private ArrayList<Expression> elems_;
 	
-	public void append(Expression elem) {
-		elems_.add(elem);
+	public ArrayList<Expression> elements() {
+		return elems_;
 	}
 
 }

@@ -2,8 +2,8 @@ package ast;
 
 public class ContinueStatement extends Statement {
 
-	public ContinueStatement() {
-		// TODO Auto-generated constructor stub
+	public ContinueStatement(IterationStatement target) {
+		target_ = target;
 	}
 	
 	private IterationStatement target_;

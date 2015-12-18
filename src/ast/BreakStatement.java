@@ -2,11 +2,7 @@ package ast;
 
 public class BreakStatement extends Statement {
 
-	public BreakStatement() {
-		// TODO Auto-generated constructor stub
-	}
-	
-	public void setBreakTarget(BreakableStatement target) {
+	public BreakStatement(BreakableStatement target) {
 		target_ = target;
 	}
 	

@@ -2,6 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 
+import lexer.Tag;
 import lexer.Token;
 import parser.Symbol;
 
@@ -40,10 +41,28 @@ public class AstNodeFactory {
 	public Reference newReference(Symbol symb) {
 		return new Reference(symb);
 	}
+	
+	// Expressions
+	
+	public BinaryOperation newBinaryOperation(Tag op, Expression left,
+			Expression right) {
+		return new BinaryOperation(op, left, right);
+	}
 
 	public Conditional newConditional(Expression cond, Expression then,
 			Expression otherwise) {
 		return new Conditional(cond, then, otherwise);
+	}
+	
+	public CompareOperation newCompareOperation(Tag op, Expression left,
+			Expression right) {
+		return new CompareOperation(op, left, right);
+	}
+	
+	// Statements
+	
+	public BreakStatement newBreakStatement(BreakableStatement target) {
+		return new BreakStatement(target);
 	}
 
 }
