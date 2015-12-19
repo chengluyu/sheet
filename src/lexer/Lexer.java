@@ -154,7 +154,7 @@ public class Lexer {
 			case Scanner.EOF:
 				return select(Tag.EOS);
 
-			// Whitespaces
+			// White spaces
 			case '\n':
 			case '\t':
 			case '\r':
@@ -182,6 +182,8 @@ public class Lexer {
 				return select(Tag.CONDITIONAL);
 			case '~':
 				return select(Tag.BIT_NOT);
+			case ',':
+				return select(Tag.COMMA);
 
 			case '.': // . ... number-start-with-period
 				if (match('.')) {
@@ -191,19 +193,19 @@ public class Lexer {
 						throw new LexicalError(position(), 
 								"expect a period instead of " + peek);
 				} else if (isDigit())
-					return scanIntegerOrNumber('0');
+					return scanNumber(next());
 				else
 					return select(Tag.PERIOD);
 				
 			case '!': // ! !=
-				return select('=', Tag.NOT, Tag.NE);
+				return select('=', Tag.NE, Tag.NOT);
 				
 			case '=': // = ==
-				return select('=', Tag.ASSIGN, Tag.EQ);
+				return select('=', Tag.EQ, Tag.ASSIGN);
 				
 			case '<': // < <= << <<=
 				return match('<')
-						? select('=', Tag.SHL, Tag.ASSIGN_SHL)
+						? select('=', Tag.ASSIGN_SHL, Tag.SHL)
 						: select('=', Tag.LTE, Tag.LT);
 				
 			case '>': // > >= >> >>= >>> >>>=
@@ -212,7 +214,7 @@ public class Lexer {
 							? select('=', Tag.ASSIGN_SAR, Tag.SAR)
 							: select('=', Tag.ASSIGN_SHR, Tag.SHR);
 				else
-					return select('=', Tag.GT, Tag.GTE);
+					return select('=', Tag.GTE, Tag.GT);
 				
 			case '+': // + ++ +=
 				return match('+')
@@ -225,7 +227,7 @@ public class Lexer {
 						: select('=', Tag.ASSIGN_SUB, Tag.SUB);
 				
 			case '*': // * *=
-				return select('=', Tag.MUL, Tag.ASSIGN_MUL);
+				return select('=', Tag.ASSIGN_MUL, Tag.MUL);
 			
 			case '/': // / /= // /*
 				if (match('='))
@@ -236,18 +238,19 @@ public class Lexer {
 					skipMultipleLineComment();
 				else
 					return select(Tag.DIV);
+				break;
 				
 			case '%': // % %=
-				return select('=', Tag.MOD, Tag.ASSIGN_MOD);
+				return select('=', Tag.ASSIGN_MOD, Tag.MOD);
 
 			// Literals
 			case '0':
 				if (match('x'))
-					return Token.literal(scanHexDigits());
+					return scanInteger(scanHexDigits(), 16);
 				if (match('o'))
-					return Token.literal(scanOctDigits());
+					return scanInteger(scanOctDigits(), 8);
 				if (match('b'))
-					return Token.literal(scanBinDigits());
+					return scanInteger(scanBinDigits(), 2);
 				return scanIntegerOrNumber('0');
 			case '"':
 				return scanStringLiteral();
@@ -255,9 +258,9 @@ public class Lexer {
 				return scanCharLiteral();
 			
 			default:
-				if (isIdentifierStart())
+				if (Character.isJavaIdentifierStart(save))
 					return scanIdentifierOrKeyword(save);
-				if (isDigit())
+				if (Character.isDigit(save))
 					return scanIntegerOrNumber(save);
 				throw new LexicalError(position(),
 						String.format("unrecognized character '%c'", save));
@@ -291,6 +294,14 @@ public class Lexer {
 	}
 
 	// Integer or number literal
+	
+	private Token scanInteger(String literal, int base) throws LexicalError {
+		try {
+			return Token.literal(Integer.parseInt(literal, base));
+		} catch (NumberFormatException e) {
+			throw new LexicalError(position(), e.getMessage());
+		}
+	}
 
 	private Token scanIntegerOrNumber(char firstChar) throws LexicalError {
 		String integer = scanDigits(firstChar), fraction = "", exponent = "";
@@ -299,15 +310,30 @@ public class Lexer {
 			fraction = scanDigits();
 
 		if (match('e') || match('E')) {
+			exponent = "E";
 			if (peek == '+' || peek == '-')
-				exponent = next() + scanDigits();
+				exponent += next() + scanDigits();
 			else
-				exponent = scanDigits();
+				exponent += scanDigits();
 		}
 
 		if (fraction.equals("") && exponent.equals(""))
 			return Token.literal(Integer.parseInt(integer));
-		return Token.literal(Double.parseDouble(integer + fraction + exponent));
+		return Token.literal(Double.parseDouble(String.format("%s.%s%s", 
+				integer, fraction, exponent)));
+	}
+	
+	private Token scanNumber(char firstChar) throws LexicalError {		
+		StringBuilder sb = new StringBuilder();
+		sb.append(scanDigits(firstChar));
+		if (match('e') || match('E')) {
+			sb.append('E');
+			if (peek == '+' || peek == '-')
+				sb.append(next() + scanDigits());
+			else
+				sb.append(scanDigits());
+		}
+		return Token.literal(Double.parseDouble(sb.toString()));
 	}
 
 	// String literal
@@ -348,13 +374,14 @@ public class Lexer {
 			// Scan Unicode string escape.
 			// Range: [0,0x10FFFF]
 			// Examples: \uC0DE \uDEAD \u10FFFF
-			codepoint = Integer.parseInt(scanHexDigits());
+			codepoint = Integer.parseInt(scanHexDigits(), 16);
 			if (codepoint > 0xFFFF) {
 				sb.append(Character.highSurrogate(codepoint));
 				sb.append(Character.lowSurrogate(codepoint));
 			} else {
 				sb.append((char) codepoint);
 			}
+			break;
 		default:
 			throw new LexicalError(position(), String.format(
 					"unrecognized character '%c' in character escape", save));
@@ -398,7 +425,7 @@ public class Lexer {
 			// Scan Unicode character escape.
 			// Range: [0,0xFFFF]
 			// Examples: \uC0DE \uDEAD
-			codepoint = Integer.parseInt(scanHexDigits());
+			codepoint = Integer.parseInt(scanHexDigits(), 16);
 			if (codepoint > 0xFFFF)
 				throw new LexicalError(position(), String.format(
 						"character escapee exceeds the limit of UTF16"));

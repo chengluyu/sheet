@@ -1,0 +1,54 @@
+// Test single line comment
+
+/*
+Test multiple line comment
+/* a comment in another comment */
+magic! */
+
+// whitespace test
+
+	 
+// single character operators
+()[]{}:;?,
+
+// dot
+. ... .1234 .5678E+9
+
+// !
+! !=
+
+// =
+= ==
+
+// <
+< <= << <<=
+
+// >
+> >= >> >>= >>> >>>=
+
+// +
++ ++ +=
+
+// -
+- -- -=
+
+// *
+* *=
+
+// /
+/ /=
+
+// %
+% %=
+
+// literals
+0xdead
+0b11001
+0o1344567
+"String with\""
+"\u6211\u7231\u4F60"
+'c'
+'\''
+'\u7231'
+
+// **ERROR CASE TEST HERE**

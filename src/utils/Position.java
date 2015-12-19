@@ -11,7 +11,7 @@ public class Position {
 	public final int column;
 	
 	public String toString() {
-		return String.format("at line #%d, column #%d", row, column);
+		return String.format("at line %d, column %d", row, column);
 	}
 
 }

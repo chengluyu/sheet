@@ -28,7 +28,9 @@ public final class Token {
 	}
 
 	public String literal() {
-		return tag_.literal();
+		if (data_ == null)
+			return tag_.literal();
+		return String.format("%s (%s)", tag_.literal(), data_.toString());
 	}
 
 	public Object data() {

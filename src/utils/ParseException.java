@@ -36,6 +36,10 @@ public class ParseException extends Exception {
 	public Position position() {
 		return pos_;
 	}
+	
+	public String getMessage() {
+		return String.format("%s %s", pos_.toString(), super.getMessage());
+	}
 
 	private Position pos_;
 
