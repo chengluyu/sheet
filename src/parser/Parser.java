@@ -208,13 +208,21 @@ public class Parser {
 
 	private void parseFunctionDeclaration() throws ParseException {
 		// FunctionDeclaration ::
-		//	'function' Identifier '(' Arguments ')' '{' Statement* '}'
+		//	'function' Identifier '(' Arguments ')' '{' 
+		//	(Statement | Declaration)* '}'
 		expect(Tag.FUNCTION);
 		// scope preparation
 		FunctionScope funcScope = scope_.newFunctionScope();
+		
 		String funcName = expectIdentifier();
 		parseFunctionArguments();
+		StatementBlock funcBody = parseStatementBlock(funcScope);
+		FunctionSymbol funcSymb = new FunctionSymbol(funcName, funcBody);
 		
+		// scope clean up
+		scope_.leaveScope(funcScope);
+		ModuleScope topScope = (ModuleScope) scope_.current();
+		topScope.defineFunction(funcName, funcSymb);
 	}
 
 	// Parse statements
@@ -248,9 +256,6 @@ public class Parser {
 			// return parseForEachStatement();
 		case IF:
 			return parseIfStatement();
-		case LBRACE:
-			throw new SyntaxError(position(), "cannot create a scope");
-			// TODO improve here
 		case RETURN:
 			return parseReturnStatement();
 		case SWITCH:

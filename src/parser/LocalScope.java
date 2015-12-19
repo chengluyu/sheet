@@ -53,11 +53,15 @@ public class LocalScope {
 		return defineLocal(varName, SymbolType.VARIABLE);
 	}
 	
-	private Symbol defineLocal(String name, SymbolType type) throws SyntaxError {
+	private Symbol defineLocal(String name, SymbolType type)
+			throws SyntaxError {
+		return defineLocal(name, new Symbol(name, type));
+	}
+	
+	protected Symbol defineLocal(String name, Symbol symb) throws SyntaxError {
 		if (locals_.contains(name))
 			throw new SyntaxError(manager_.parser().position(),
 					"duplicate local name: " + name);
-		Symbol symb = new Symbol(name, type);
 		locals_.insert(name, symb);
 		return symb;
 	}
