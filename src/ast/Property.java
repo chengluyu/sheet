@@ -9,5 +9,14 @@ public class Property extends Expression {
 	
 	private Expression expr_;
 	private String prop_;
+	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.title("get property");
+		printer.begin();
+		printer.child("object", expr_);
+		printer.property("property name", prop_);
+		printer.end();
+	}
 
 }

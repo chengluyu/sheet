@@ -26,5 +26,16 @@ public class ForStatement extends IterationStatement {
 		body_ = body;
 		boundScope_ = boundScope;
 	}
+	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.title("for loop");
+		printer.begin();
+		printer.child("initial", init_);
+		printer.child("condition", cond_);
+		printer.child("incremental", incr_);
+		printer.child("body", body_);
+		printer.end();
+	}
 
 }

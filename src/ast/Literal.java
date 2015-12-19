@@ -1,9 +1,5 @@
 package ast;
 
-public class Literal extends Expression {
-
-	public Literal() {
-		
-	}
+public abstract class Literal extends Expression {
 
 }

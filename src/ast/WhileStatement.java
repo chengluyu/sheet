@@ -13,5 +13,14 @@ public class WhileStatement extends IterationStatement {
 		cond_ = cond;
 		body_ = body;
 	}
+	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.title("while loop");
+		printer.begin();
+		printer.child("condition", cond_);
+		printer.child("body", body_);
+		printer.end();
+	}
 
 }

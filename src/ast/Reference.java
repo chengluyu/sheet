@@ -14,4 +14,12 @@ public class Reference extends Literal {
 		return refSymbol_.name();
 	}
 	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.title("symbol reference");
+		printer.begin();
+		printer.property("name", refSymbol_.name());
+		printer.end();
+	}
+	
 }

@@ -1,6 +1,6 @@
 package ast;
 
-public class BreakableStatement extends Statement {
+public abstract class BreakableStatement extends Statement {
 
 	public BreakableStatement() {
 		

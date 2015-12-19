@@ -1,6 +1,6 @@
 package ast;
 
-public class IterationStatement extends BreakableStatement {
+public abstract class IterationStatement extends BreakableStatement {
 
 	public IterationStatement() {
 		

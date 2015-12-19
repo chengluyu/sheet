@@ -30,9 +30,10 @@ public class AstNodeFactory {
 			data = new Boolean(false);
 			break;
 		default:
-			
+			return null;
+			// TODO add error handler here
 		}
-		return new Literal();
+		return new ValueLiteral(tok.tag(), data);
 	}
 	
 	public ArrayLiteral newLiteral(ArrayList<Expression> elems) {

@@ -1,9 +1,5 @@
 package ast;
 
-public class Expression extends AstNode {
-
-	public Expression() {
-		
-	}
+public abstract class Expression extends AstNode {
 
 }

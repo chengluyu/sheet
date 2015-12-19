@@ -7,5 +7,13 @@ public class ExpressionStatement extends Statement {
 	}
 	
 	private Expression expr_;
+	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.title("expression statement");
+		printer.begin();
+		printer.child("expr", expr_);
+		printer.end();
+	}
 
 }

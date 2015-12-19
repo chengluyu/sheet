@@ -8,5 +8,9 @@ public class BreakStatement extends Statement {
 	
 	private BreakableStatement target_;
 	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.titleOnly("break statement");
+	}
 
 }

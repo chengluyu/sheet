@@ -7,5 +7,10 @@ public class ContinueStatement extends Statement {
 	}
 	
 	private IterationStatement target_;
-
+	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		printer.titleOnly("continue statement");
+	}
+	
 }

@@ -7,5 +7,17 @@ public class ReturnStatement extends Statement {
 	}
 	
 	private Expression retValue_;
+	
+	@Override
+	public void inspect(AstNodePrinter printer) {
+		if (retValue_ == null) {
+			printer.titleOnly("return statement");
+		} else {
+			printer.title("return statement");
+			printer.begin();
+			printer.child("return value", retValue_);
+			printer.end();
+		}
+	}
 
 }
