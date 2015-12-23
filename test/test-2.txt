@@ -1,0 +1,26 @@
+
+let text = "1+2*(3-4)", at = 0, peek;
+
+const EOF = '\u0';
+
+function next() {
+	if (at > text.length)
+
+	peek = text[at];
+}
+
+function value() {
+	if (peek = '(') {
+		advance();
+
+
+	}
+}
+
+function term() {
+	
+}
+
+function factor() {
+	
+}

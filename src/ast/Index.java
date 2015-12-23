@@ -12,11 +12,10 @@ public class Index extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("index operation");
-		printer.begin();
+		printer.beginBlock("index operation");
 		printer.child("indexed object", value_);
 		printer.child("index value", refinement_);
-		printer.end();
+		printer.endBlock();
 	}
 	
 }

@@ -11,14 +11,17 @@ public class ValueLiteral extends Literal {
 	
 	private Tag type_;
 	private Object data_;
+	
+	public boolean isNull() {
+		return false;
+	}
 
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("value literal");
-		printer.begin();
+		printer.beginBlock("value literal");
 		printer.property("type", type_.literal());
 		printer.property("literal", data_.toString());
-		printer.end();
+		printer.endBlock();
 	}
 
 }

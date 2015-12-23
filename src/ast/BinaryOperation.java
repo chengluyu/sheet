@@ -16,12 +16,11 @@ public class BinaryOperation extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("binary operation");
-		printer.begin();
+		printer.beginBlock("binary operation");
 		printer.property("type", op_.literal());
 		printer.child("left", left_);
 		printer.child("right", right_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }

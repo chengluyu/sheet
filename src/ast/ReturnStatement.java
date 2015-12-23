@@ -11,12 +11,11 @@ public class ReturnStatement extends Statement {
 	@Override
 	public void inspect(AstNodePrinter printer) {
 		if (retValue_ == null) {
-			printer.titleOnly("return statement");
+			printer.text("return statement");
 		} else {
-			printer.title("return statement");
-			printer.begin();
+			printer.beginBlock("return statement");
 			printer.child("return value", retValue_);
-			printer.end();
+			printer.endBlock();
 		}
 	}
 

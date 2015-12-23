@@ -3,9 +3,14 @@ package parser;
 import java.util.ArrayList;
 
 import ast.*;
+import ast.symbol.ConstantSymbol;
+import ast.symbol.FunctionSymbol;
+import ast.symbol.Symbol;
+import ast.symbol.VariableSymbol;
 import lexer.*;
+import scope.FunctionScope;
+import scope.LocalScope;
 import utils.LexicalError;
-import utils.ParseException;
 import utils.Position;
 import utils.SyntaxError;
 
@@ -15,8 +20,9 @@ public class Parser {
 		initialize(lex);
 	}
 	
-	public void parse() throws ParseException {
-		parseProgram();
+	public Module parse() throws LexicalError, SyntaxError {
+		parseModule();
+		return module_;
 	}
 
 	private void initialize(Lexer lex) throws LexicalError {
@@ -24,7 +30,8 @@ public class Parser {
 		lex_ = lex;
 		
 		astNodeFactory_ = new AstNodeFactory();
-		scope_ = new ScopeManager(this);
+		module_ = new Module(this);
+		scope_ = null;
 		
 		lowestBreakable = null;
 		lowestIteration = null;
@@ -33,7 +40,10 @@ public class Parser {
 	}
 
 	private AstNodeFactory astNodeFactory_;
-	private ScopeManager scope_;
+	/** The module object */
+	private Module module_;
+	/** Current local scope */
+	private LocalScope scope_;
 	
 	private BreakableStatement lowestBreakable;
 	private IterationStatement lowestIteration;
@@ -47,7 +57,7 @@ public class Parser {
 		return lex_.position();
 	}
 
-	private Token expect(Tag wish) throws ParseException {
+	private Token expect(Tag wish) throws LexicalError, SyntaxError {
 		if (peek.tag() == wish)
 			return next();
 		else
@@ -55,11 +65,11 @@ public class Parser {
 					"expect %s instead of %s", wish.literal(), peek.literal()));
 	}
 
-	private void expectSemicolon() throws ParseException {
+	private void expectSemicolon() throws LexicalError, SyntaxError {
 		expect(Tag.SEMICOLON);
 	}
 
-	private String expectIdentifier() throws ParseException {
+	private String expectIdentifier() throws LexicalError, SyntaxError {
 		if (peek.isIdentifier())
 			return (String) next().data();
 		throw new SyntaxError(position(), String.format(
@@ -86,93 +96,149 @@ public class Parser {
 
 	// Parse a program in a file
 
-	private void parseProgram() throws ParseException {
-		// Program ::
-		//	Declaration*
-		while (!match(Tag.EOS))
-			parseDeclaration();
+	private void parseModule() throws LexicalError, SyntaxError {
+		// Module ::
+		//	ModuleDeclaration*
+		scope_ = module_.scope();
+		while (!match(Tag.EOS)) {
+			parseModuleDeclaration();
+		}
 	}
 
 	// Parse declarations.
 	// Declarations will modify the context.
-
-	private void parseDeclaration() throws ParseException {
-		// Declaration ::
+	
+	/**
+	 * Parse declarations in a module.
+	 * Each sub-routine invoked in this routine will modify
+	 * the current scope.
+	 */
+	private void parseModuleDeclaration()
+			throws LexicalError, SyntaxError {
+		// ModuleDeclaration ::
+		//	ClassDeclaration |
 		//	ConstantDeclaration |
-		//	FunctionDeclaration |
+		//	ExportDeclaration |
+		//	ModuleFunctionDeclaration |
 		//	ImportDeclaration |
 		//	VariableDeclaration
 		switch (peek.tag()) {
+		case CLASS:
+			throw new SyntaxError(position(), 
+					"unimplemented parsing routine: class");
 		case CONST:
-			parseConstantDeclaration();
+			parseModuleConstantDeclaration();
+			break;
+		case EXPORT:
+			throw new SyntaxError(position(), 
+					"unimplemented parsing routine: export");
 		case FUNCTION:
-			parseFunctionDeclaration();
+			parseModuleFunctionDeclaration();
+			break;
 		case IMPORT:
 			throw new SyntaxError(position(), 
 					"unimplemented parsing routine: import");
-			// return parseImportDeclaration();
 		case LET:
-			parseVariableDeclaration(); // TODO change here
+			parseModuleVariableDeclaration();
+			break;
 		default:
-			throw new SyntaxError(position(), "expect declarations");
+			throw new SyntaxError(position(), String.format(
+					"error token %s, expect declarations", peek.literal()));
 		}
 	}
 	
 	// Constant declarations
 	
-	private ExpressionGroup parseConstantDeclaration() throws ParseException {
-		ArrayList<Expression> group = new ArrayList<Expression>();
+	private void parseModuleConstantDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> assigns = parseConstantDeclaration();
+		module_.initializations().addAll(assigns);
+	}
+	
+	private ExpressionStatement parseLocalConstantDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> assigns = parseConstantDeclaration();
+		ExpressionGroup eg = astNodeFactory_.newExpressionGroup(assigns);
+		return astNodeFactory_.newExpressionStatement(eg);
+	}
+	
+	private ArrayList<Assignment> parseConstantDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> group = new ArrayList<Assignment>();
 		expect(Tag.CONST);
 		group.add(parseSingleConstantDeclaration());
 		while (match(Tag.COMMA)) {
 			group.add(parseSingleConstantDeclaration());
 		}
-		return astNodeFactory_.newExpressionGroup(group);
+		expectSemicolon();
+		return group;
 	}
 
-	private Assignment parseSingleConstantDeclaration() throws ParseException {
+	private Assignment parseSingleConstantDeclaration()
+			throws LexicalError, SyntaxError {
 		// SingleConstantDeclaration ::
 		//	Identifier '=' Expression
 		String id = expectIdentifier();
 		expect(Tag.ASSIGN);
 		Expression expr = parseExpression();
-		
-		Symbol symb = scope_.current().defineConstant(id);
-		Reference symbRef = astNodeFactory_.newReference(symb);
-		return astNodeFactory_.newAssignment(Tag.INIT_CONST, symbRef, expr);
+		ConstantSymbol symb = new ConstantSymbol(id);
+		scope_.defineConstant(symb);
+		return astNodeFactory_.newAssignment(Tag.INIT_CONST, symb.reference(),
+				expr);
 	}
 	
 	// Variable declarations
+	
+	private void parseModuleVariableDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> assigns = parseVariableDeclaration();
+		module_.initializations().addAll(assigns);
+	}
+	
+	private ExpressionGroup parseLoopVariableDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> assigns = parseVariableDeclaration();
+		return astNodeFactory_.newExpressionGroup(assigns);
+	}
+	
+	private ExpressionStatement parseLocalVariableDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> assigns = parseVariableDeclaration();
+		ExpressionGroup eg = astNodeFactory_.newExpressionGroup(assigns);
+		return astNodeFactory_.newExpressionStatement(eg);
+	}
 
-	private ExpressionGroup parseVariableDeclaration() throws ParseException {
-		ArrayList<Expression> group = new ArrayList<Expression>();
+	private ArrayList<Assignment> parseVariableDeclaration()
+			throws LexicalError, SyntaxError {
+		ArrayList<Assignment> group = new ArrayList<Assignment>();
 		expect(Tag.LET);
 		group.add(parseSingleVariableDeclaration());
 		while (match(Tag.COMMA)) {
 			group.add(parseSingleVariableDeclaration());
 		}
-		return astNodeFactory_.newExpressionGroup(group);
+		expectSemicolon();
+		return group;
 	}
 
-	private Assignment parseSingleVariableDeclaration() throws ParseException {
+	private Assignment parseSingleVariableDeclaration()
+			throws LexicalError, SyntaxError {
 		// SingleVariableDeclaration ::
 		//	Identifier ('=' Expression)?
 		String id = expectIdentifier();
 		Expression expr = null;
 		if (match(Tag.ASSIGN))
 			expr = parseExpression();
-		Symbol symb = scope_.current().defineVariable(id);
-		
-		if (expr == null) {
+		VariableSymbol symb = new VariableSymbol(id);
+		scope_.defineVariable(symb);
+		if (expr == null)
 			return null;
-		} else {
-			Reference symbRef = astNodeFactory_.newReference(symb);
-			return astNodeFactory_.newAssignment(Tag.INIT_LET, symbRef, expr);
-		}
+		else
+			return astNodeFactory_.newAssignment(Tag.INIT_LET, symb.reference(),
+					expr);
 	}
 
 //	private void parseForEachVariableDeclaration(Scope loopScope)
-//			throws ParseException {
+//			throws LexicalError, SyntaxError {
 //		// ForEachVariableDeclaration ::
 //		//	'let' Identifier
 //		expect(Tag.LET);
@@ -180,7 +246,7 @@ public class Parser {
 //		loopScope.defineVariable(id);
 //	}
 
-//	private void parseImportDeclaration() throws ParseException {
+//	private void parseImportDeclaration() throws LexicalError, SyntaxError {
 //		// ImportDeclaration ::
 //		//	DirectlyImportDeclaration |
 //		//	SelectiveImportDeclaration
@@ -190,45 +256,46 @@ public class Parser {
 //
 //	}
 	
-	private void parseSingleFunctionArguments() throws ParseException {
-		String id = expectIdentifier();
-		FunctionScope fscope = (FunctionScope) scope_.current();
-		fscope.defineArgument(id);
-	}
-	
-	private void parseFunctionArguments() throws ParseException {
-		expect(Tag.LPAREN);
-		if (!match(Tag.RPAREN)) {
-			do
-				parseSingleFunctionArguments();
-			while (match(Tag.COMMA));
-			expect(Tag.RPAREN);
-		}
+	private void parseModuleFunctionDeclaration()
+			throws LexicalError, SyntaxError {
+		FunctionSymbol symb = parseFunctionDeclaration();
+		module_.scope().defineFunction(symb);
 	}
 
-	private void parseFunctionDeclaration() throws ParseException {
+	private FunctionSymbol parseFunctionDeclaration()
+			throws LexicalError, SyntaxError {
 		// FunctionDeclaration ::
-		//	'function' Identifier '(' Arguments ')' '{' 
-		//	(Statement | Declaration)* '}'
+		//	'function' Identifier '(' Arguments ')' FunctionBody
+		
+		// enter scope
+		LocalScope origin = scope_;
+		FunctionScope fscope = new FunctionScope(module_.scope());
+		scope_ = fscope;
+		
 		expect(Tag.FUNCTION);
-		// scope preparation
-		FunctionScope funcScope = scope_.newFunctionScope();
+		String name = expectIdentifier();
+		expect(Tag.LPAREN);
+		if (!match(Tag.RPAREN))
+			while (true) {
+				String arg = expectIdentifier();
+				VariableSymbol argSymb = new VariableSymbol(arg);
+				fscope.defineArgument(argSymb);
+				if (match(Tag.RPAREN))
+					break;
+				expect(Tag.COMMA);
+			}
+		StatementBlock funcBody = parseFunctionBody(fscope);
 		
-		String funcName = expectIdentifier();
-		parseFunctionArguments();
-		StatementBlock funcBody = parseStatementBlock(funcScope);
-		FunctionSymbol funcSymb = new FunctionSymbol(funcName, funcBody);
+		// leave scope
+		scope_ = origin;
 		
-		// scope clean up
-		scope_.leaveScope(funcScope);
-		ModuleScope topScope = (ModuleScope) scope_.current();
-		topScope.defineFunction(funcName, funcSymb);
+		return new FunctionSymbol(name, fscope, funcBody);
 	}
 
-	// Parse statements
-	// Statements will not modify the context
-	
-	private Statement parseStatement() throws ParseException {
+	private StatementBlock parseFunctionBody(FunctionScope fscope)
+			throws LexicalError, SyntaxError {
+		// FunctionBody ::
+		//	'{' (Statement | VariableDeclaration | ConstantDeclaration)* '}'
 		// Statement ::
 		//	BreakStatement |
 		//	ContinueStatement |
@@ -241,21 +308,37 @@ public class Parser {
 		//	StatementBlock |
 		//	SwitchStatement |
 		//	WhileStatement
+		ArrayList<Statement> stmts = new ArrayList<Statement>();
+		expect(Tag.LBRACE);
+		while (!match(Tag.RBRACE)) {
+			stmts.add(parseStatement());
+		}
+		return astNodeFactory_.newStatementBlock(stmts, fscope);
+	}
+	
+	private Statement parseStatement() throws LexicalError, SyntaxError {
 		switch (peek.tag()) {
 		case BREAK:
 			return parseBreakStatement();
+		case CONST:
+			return parseLocalConstantDeclaration();
 		case CONTINUE:
 			return parseContinueStatement();
 		case DO:
 			return parseDoWhileStatement();
+		case EOS:
+			throw new SyntaxError(position(), "unexpected end of source");
 		case FOR:
 			return parseForStatement();
 		case FOREACH:
 			throw new SyntaxError(position(), 
 					"unimplemented parsing routine: foreach");
-			// return parseForEachStatement();
 		case IF:
 			return parseIfStatement();
+		case LBRACE:
+			return parseNakeStatementBlock();
+		case LET:
+			return parseLocalVariableDeclaration();
 		case RETURN:
 			return parseReturnStatement();
 		case SWITCH:
@@ -267,7 +350,26 @@ public class Parser {
 		}
 	}
 
-	private BreakStatement parseBreakStatement() throws ParseException {
+	private Statement parseNakeStatementBlock()
+			throws LexicalError, SyntaxError {
+		// new scope
+		LocalScope origin = scope_;
+		scope_ = new LocalScope(origin);
+		
+		ArrayList<Statement> stmts = new ArrayList<Statement>();
+		expect(Tag.LBRACE);
+		while (!match(Tag.RBRACE)) {
+			stmts.add(parseStatement());
+		}
+		
+		// restore scope
+		scope_ = origin;
+		
+		return astNodeFactory_.newStatementBlock(stmts, scope_);
+	}
+
+	private BreakStatement parseBreakStatement()
+			throws LexicalError, SyntaxError {
 		// BreakStatement ::
 		//	'break' ';'
 		if (lowestBreakable == null)
@@ -278,7 +380,8 @@ public class Parser {
 		return astNodeFactory_.newBreakStatement(lowestBreakable);
 	}
 
-	private ContinueStatement parseContinueStatement() throws ParseException {
+	private ContinueStatement parseContinueStatement()
+			throws LexicalError, SyntaxError {
 		// ContinueStatement ::
 		//	'continue' ';'
 		if (lowestIteration == null)
@@ -289,7 +392,8 @@ public class Parser {
 		return astNodeFactory_.newContinueStatement(lowestIteration);
 	}
 
-	private DoWhileStatement parseDoWhileStatement() throws ParseException {
+	private DoWhileStatement parseDoWhileStatement()
+			throws LexicalError, SyntaxError {
 		// DoWhileStatement ::
 		//	'do' LoopBody 'while' '(' Expression ')' ';'
 		DoWhileStatement loop = astNodeFactory_.newDoWhileStatement();
@@ -315,13 +419,13 @@ public class Parser {
 	}
 	
 	private ExpressionStatement parseExpressionStatement()
-			throws ParseException {
+			throws LexicalError, SyntaxError {
 		Expression expr = parseExpression();
 		expectSemicolon();
 		return astNodeFactory_.newExpressionStatement(expr);
 	}
 
-	private ForStatement parseForStatement() throws ParseException {
+	private ForStatement parseForStatement() throws LexicalError, SyntaxError {
 		// ForStatement ::
 		//	'for' '(' (Expression | VariableDeclaration)
 		//	';' Expression ';' Expression ')' LoopBody
@@ -334,13 +438,14 @@ public class Parser {
 		saveBreak = loop;
 		
 		// scope preparation
-		LocalScope loopScope = scope_.newLocalScope();
+		LocalScope origin = scope_, lscope = new LocalScope(origin);
+		scope_ = lscope;
 		
 		expect(Tag.FOR);
 		expect(Tag.LPAREN);
 		Expression initExpr = null;
 		if (peek.tag() == Tag.LET) {
-			initExpr = parseVariableDeclaration();
+			initExpr = parseLoopVariableDeclaration();
 		} else {
 			initExpr = parseExpression();
 			expectSemicolon();
@@ -356,13 +461,14 @@ public class Parser {
 		lowestBreakable = saveBreak;
 		
 		// scope clean up
-		scope_.leaveScope(loopScope);
+		scope_ = origin;
 		
-		loop.setup(initExpr, condExpr, incrExpr, loopBody, loopScope);
+		loop.setup(initExpr, condExpr, incrExpr, loopBody, lscope);
 		return loop;
 	}
 
-//	private ForEachStatement parseForEachStatement() throws ParseException {
+//	private ForEachStatement parseForEachStatement()
+//			throws LexicalError, SyntaxError {
 //		enterScope();
 //		expect(Tag.FOREACH);
 //		expect(Tag.LPAREN);
@@ -375,7 +481,7 @@ public class Parser {
 //				id, expr, loopBody, exitScope());
 //	}
 
-	private IfStatement parseIfStatement() throws ParseException {
+	private IfStatement parseIfStatement() throws LexicalError, SyntaxError {
 		// IfStatement ::
 		//	'if' '(' Expression ')' Statement ('else' Statement)?
 		expect(Tag.IF);
@@ -387,7 +493,8 @@ public class Parser {
 		return astNodeFactory_.newIfStatement(cond, then, otherwise);
 	}
 
-	private ReturnStatement parseReturnStatement() throws ParseException {
+	private ReturnStatement parseReturnStatement()
+			throws LexicalError, SyntaxError {
 		// ReturnStatement ::
 		//	'return' Expression ';'
 		expect(Tag.RETURN);
@@ -395,6 +502,7 @@ public class Parser {
 		if (!match(Tag.SEMICOLON)) {
 			retExpr = parseExpression();
 		}
+		expectSemicolon();
 		return astNodeFactory_.newReturnStatement(retExpr);
 	}
 
@@ -402,8 +510,9 @@ public class Parser {
 		throw new SyntaxError(position(),
 				"unimplemented parsing routine: switch");
 	}
-
-	private WhileStatement parseWhileStatement() throws ParseException {
+	
+	private WhileStatement parseWhileStatement()
+			throws LexicalError, SyntaxError {
 		// WhileStatement ::
 		//	'while' '(' Expression ')' LoopBody
 		WhileStatement loop = astNodeFactory_.newWhileStatement();
@@ -415,40 +524,14 @@ public class Parser {
 		
 		expect(Tag.WHILE);
 		Expression cond = parseParenthesisExpression();
-		Statement loopBody = parseLoopBody(null);
+		Statement body = parseStatement();
 		
 		// restore
 		lowestIteration = saveIter;
 		lowestBreakable = saveBreak;
 		
-		loop.setup(cond, loopBody);
+		loop.setup(cond, body);
 		return loop;
-	}
-	
-	/**
-	 * Parse a body of loop statement.
-	 * @param loopScope The scope where loop body bound to, can be null.
-	 * @return Abstract syntax tree node of loop body statement(s).
-	 * @throws SyntaxError
-	 */
-	private Statement parseLoopBody(LocalScope loopScope) throws ParseException {
-		// LoopBody ::
-		//	Statement |	StatementBlock
-		if (match(Tag.LBRACE))
-			return parseStatementBlock(loopScope);
-		return parseStatement();
-	}
-	
-	private StatementBlock parseStatementBlock(LocalScope loopScope)
-			throws ParseException {
-		// StatementBlock ::
-		//	('{' Statement* '}')
-		ArrayList<Statement> stmts = new ArrayList<Statement>();
-		expect(Tag.LBRACE);
-		while (!match(Tag.RBRACE)) {
-			stmts.add(parseStatement());
-		}
-		return astNodeFactory_.newStatementBlock(stmts, loopScope);
 	}
 
 
@@ -457,11 +540,12 @@ public class Parser {
 	// See further information here: 
 	// http://javascript.crockford.com/tdop/tdop.html
 
-	private Expression parseExpression() throws ParseException {
+	private Expression parseExpression() throws LexicalError, SyntaxError {
 		return parseExpression(0);
 	}
 
-	private Expression parseExpression(int rbp) throws ParseException {
+	private Expression parseExpression(int rbp)
+			throws LexicalError, SyntaxError {
 		Expression left = parseNullDenotation();
 		while (rbp < peek.lbp()) {
 			left = parseLeftDenotation(left);
@@ -469,7 +553,7 @@ public class Parser {
 		return left;
 	}
 
-	private Expression parseNullDenotation() throws ParseException {
+	private Expression parseNullDenotation() throws LexicalError, SyntaxError {
 		switch (peek.tag()) {
 		case CHAR_LITERAL:
 		case STRING_LITERAL:
@@ -493,18 +577,20 @@ public class Parser {
 		case IDENTIFIER:
 			return parseReference();
 		default:
-			throw new SyntaxError(position(), "undefined value");
+			throw new SyntaxError(position(), String.format(
+					"error token %s: undefined value", peek.literal()));
 		}
 	}
 
-	private Expression parseParenthesisExpression() throws ParseException {
+	private Expression parseParenthesisExpression()
+			throws LexicalError, SyntaxError {
 		expect(Tag.LPAREN);
 		Expression save = parseExpression();
 		expect(Tag.RPAREN);
 		return save;
 	}
 
-	private ArrayLiteral parseArrayLiteral() throws ParseException {
+	private ArrayLiteral parseArrayLiteral() throws LexicalError, SyntaxError {
 		// ArrayLiteral ::
 		//	'[' (Expression (',' Expression)*)? ']'
 		ArrayList<Expression> elems = new ArrayList<Expression>();
@@ -518,28 +604,30 @@ public class Parser {
 		return astNodeFactory_.newLiteral(elems);
 	}
 
-	private UnaryOperation parseUnaryOperation() throws ParseException {
+	private UnaryOperation parseUnaryOperation()
+			throws LexicalError, SyntaxError {
 		Token op = next();
 		Expression expr = parseExpression(op.lbp());
 		return astNodeFactory_.newUnaryOperation(op.tag(), expr);
 	}
 	
-	private Reference parseReference() throws ParseException {
+	private Reference parseReference() throws LexicalError, SyntaxError {
 		// Reference :: Identifier
 		String id = expectIdentifier();
-		Symbol symb = scope_.current().find(id);
-		if (symb == null)
-			throw new SyntaxError(position(),  "undefiend reference to " + id);
-		return astNodeFactory_.newReference(symb);
+		Symbol symb = scope_.find(id);
+		return symb == null ?
+				astNodeFactory_.newUnsolvedReference(id) : symb.reference();
 	}
 
 	private Expression parseLeftDenotation(Expression left)
-			throws ParseException {
+			throws LexicalError, SyntaxError {
 		switch (peek.tag()) {
 		case CONDITIONAL:
 			return parseConditional(left);
 		case PERIOD:
 			return parseProperty(left);
+		case LPAREN:
+			return parseInvoke(left);
 		case LBRACK:
 			return parseIndex(left);
 		case INC:
@@ -582,12 +670,33 @@ public class Parser {
 		case ASSIGN_MOD:
 			return parseAssignment(left);
 		default:
-			throw new SyntaxError(position(), "missing an operator");
+			throw new SyntaxError(position(), String.format(
+					"error token %s, missing an operator", peek.literal()));
 		}
 	}
 
+	private Expression parseInvoke(Expression left)
+			throws LexicalError, SyntaxError {
+		ExpressionGroup eg = null;
+		expect(Tag.LPAREN);
+		if (match(Tag.RPAREN)) {
+			eg = new ExpressionGroup(new ArrayList<Expression>());
+		} else {
+			Expression first = parseExpression();
+			if (match(Tag.COMMA)) {
+				eg = parseExpressionGroup(first);
+			} else {
+				ArrayList<Expression> lst = new ArrayList<Expression>();
+				lst.add(first);
+				eg = astNodeFactory_.newExpressionGroup(lst);
+			}
+			expect(Tag.RPAREN);
+		}
+		return astNodeFactory_.newInvoke(left, eg);
+	}
+
 	private Conditional parseConditional(Expression cond)
-			throws ParseException {
+			throws LexicalError, SyntaxError {
 		expect(Tag.CONDITIONAL);
 		Expression then = parseExpression();
 		expect(Tag.COLON);
@@ -595,13 +704,15 @@ public class Parser {
 		return astNodeFactory_.newConditional(cond, then, otherwise);
 	}
 
-	private Property parseProperty(Expression left) throws ParseException {
+	private Property parseProperty(Expression left)
+			throws LexicalError, SyntaxError {
 		expect(Tag.PERIOD);
 		String property = expectIdentifier();
 		return astNodeFactory_.newProperty(left, property);
 	}
 
-	private Index parseIndex(Expression left) throws ParseException {
+	private Index parseIndex(Expression left)
+			throws LexicalError, SyntaxError {
 		expect(Tag.LBRACK);
 		Expression index = parseExpression();
 		expect(Tag.RBRACK);
@@ -609,14 +720,14 @@ public class Parser {
 	}
 
 	private UnaryOperation parsePostfixOperation(Expression left)
-			throws ParseException {
+			throws LexicalError, SyntaxError {
 		Token op = next();
 		Tag postop = op.tag() == Tag.INC ? Tag.POSTFIX_INC : Tag.POSTFIX_DEC;
 		return astNodeFactory_.newUnaryOperation(postop, left);
 	}
 	
 	private ExpressionGroup parseExpressionGroup(Expression first)
-			throws ParseException {
+			throws LexicalError, SyntaxError {
 		ArrayList<Expression> group = new ArrayList<Expression>();
 		Token comma = expect(Tag.COMMA);
 		
@@ -628,20 +739,21 @@ public class Parser {
 	}
 
 	private CompareOperation parseCompareOperation(Expression left)
-			throws ParseException {
+			throws LexicalError, SyntaxError {
 		Token op = next();
 		Expression right = parseExpression(op.lbp()); // left associative
 		return astNodeFactory_.newCompareOperation(op.tag(), left, right);
 	}
 
 	private BinaryOperation parseBianryOperation(Expression left)
-			 throws ParseException {
+			 throws LexicalError, SyntaxError {
 		Token op = next();
 		Expression right = parseExpression(op.lbp()); // left associative
 		return astNodeFactory_.newBinaryOperation(op.tag(), left, right);
 	}
 
-	private Assignment parseAssignment(Expression left) throws ParseException {
+	private Assignment parseAssignment(Expression left)
+			throws LexicalError, SyntaxError {
 		Token op = next();
 		Expression right = parseExpression(op.lbp() - 1); // right associative
 		return astNodeFactory_.newAssignment(op.tag(), left, right);

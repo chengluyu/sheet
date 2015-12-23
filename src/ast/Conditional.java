@@ -14,12 +14,11 @@ public class Conditional extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("conditional operation");
-		printer.begin();
+		printer.beginBlock("conditional operation");
 		printer.child("condition", cond_);
 		printer.child("then", then_);
 		printer.child("else", else_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }

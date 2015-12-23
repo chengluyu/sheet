@@ -88,6 +88,7 @@ public enum Tag {
 	PROTECTED("protected", TokenType.KEYWORD),
 	PUBLIC("public", TokenType.KEYWORD),
 	RETURN("return", TokenType.KEYWORD),
+	SUPER("super", TokenType.KEYWORD),
 	SWITCH("switch", TokenType.KEYWORD),
 	THIS("this", TokenType.KEYWORD),
 	WHILE("while", TokenType.KEYWORD),
@@ -120,7 +121,7 @@ public enum Tag {
 	// Left binding powers
 
 	private static final int LBP_NONE = 0;
-	private static final int LBP_COMMA = 10;
+	private static final int LBP_COMMA = 0;
 	private static final int LBP_ASSIGNMENT = 20;
 	private static final int LBP_CONDITIONAL = 30;
 	private static final int LBP_OR = 40;

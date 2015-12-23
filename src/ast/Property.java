@@ -12,11 +12,10 @@ public class Property extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("get property");
-		printer.begin();
+		printer.beginBlock("get property");
 		printer.child("object", expr_);
 		printer.property("property name", prop_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }

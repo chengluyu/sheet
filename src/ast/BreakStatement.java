@@ -10,7 +10,7 @@ public class BreakStatement extends Statement {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.titleOnly("break statement");
+		printer.text("break statement");
 	}
 
 }

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import lexer.Tag;
 import lexer.Token;
-import parser.LocalScope;
-import parser.Symbol;
+import scope.LocalScope;
+import ast.symbol.Symbol;
 
 public class AstNodeFactory {
 
@@ -20,8 +20,9 @@ public class AstNodeFactory {
 		case INTEGER:
 		case NUMBER:
 			data = tok.data();
+			break;
 		case NULL_LITERAL:
-			data = null;
+			data = "null"; // TODO change here
 			break;
 		case TRUE_LITERAL:
 			data = new Boolean(true);
@@ -40,8 +41,8 @@ public class AstNodeFactory {
 		return new ArrayLiteral(elems);
 	}
 
-	public Reference newReference(Symbol symb) {
-		return new Reference(symb);
+	public UnsolvedReference newUnsolvedReference(String symb) {
+		return new UnsolvedReference(symb);
 	}
 	
 	// Expressions
@@ -66,7 +67,8 @@ public class AstNodeFactory {
 		return new Conditional(cond, then, otherwise);
 	}
 	
-	public ExpressionGroup newExpressionGroup(ArrayList<Expression> exprs) {
+	public ExpressionGroup newExpressionGroup(
+			ArrayList<? extends Expression> exprs) {
 		return new ExpressionGroup(exprs);
 	}
 	

@@ -4,7 +4,11 @@ import text.*;
 
 import java.io.FileNotFoundException;
 
+import ast.AstNodePrinter;
+import ast.Module;
+import ast.StatementBlock;
 import lexer.*;
+import parser.Parser;
 import utils.*;
 
 public class Program {
@@ -37,7 +41,23 @@ public class Program {
 	}
 	
 	public static void parseTest(String arg) {
-		
+		try {
+			FileScanner fs = new FileScanner(arg);
+			Lexer lex = new Lexer(fs);
+			Parser parser = new Parser(lex);
+			Module module = parser.parse();
+			AstNodePrinter anp = new AstNodePrinter(false, 2);
+			module.inspect(anp);
+			System.out.print(anp.result());
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found: " + arg);
+		} catch (LexicalError e) {
+			System.out.println("Lexical error: " + e.getMessage());
+			e.printStackTrace();
+		} catch (SyntaxError e) {
+			System.out.println("Syntax error: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 }

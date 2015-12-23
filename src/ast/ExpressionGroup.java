@@ -4,20 +4,19 @@ import java.util.ArrayList;
 
 public class ExpressionGroup extends Expression {
 
-	public ExpressionGroup(ArrayList<Expression> exprs) {
+	public ExpressionGroup(ArrayList<? extends Expression> exprs) {
 		exprs_ = exprs;
 	}
 	
-	private ArrayList<Expression> exprs_;
+	private ArrayList<? extends Expression> exprs_;
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("expression group");
-		printer.begin();
+		printer.beginBlock("expression group");
 		printer.property("length", String.valueOf(exprs_.size()));
 		for (int i = 0; i < exprs_.size(); i++)
 			printer.child(String.valueOf(i), exprs_.get(i));
-		printer.end();
+		printer.endBlock();
 	}
 	
 }

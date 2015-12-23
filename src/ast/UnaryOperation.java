@@ -14,11 +14,10 @@ public class UnaryOperation extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("unary operation");
-		printer.begin();
+		printer.beginBlock("unary operation");
 		printer.property("operator", op_.literal());
 		printer.child("operand", operand_);
-		printer.end();
+		printer.endBlock();
 	}
 	
 }

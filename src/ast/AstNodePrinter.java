@@ -16,23 +16,21 @@ public class AstNodePrinter {
 	
 	private StringBuilder text_;
 	
-	private void indent() {
+	private void increaseIndent() {
 		currentLevel_++;
-	}
-	
-	private void unindent() {
-		currentLevel_--;
-	}
-	
-	private void makeIndent() {
 		indent_ = AstNodePrinter.repeat(tabStr_, currentLevel_);
 	}
 	
-	private void beginLine() {
+	private void decreaseIndent() {
+		currentLevel_--;
+		indent_ = AstNodePrinter.repeat(tabStr_, currentLevel_);
+	}
+	
+	private void printIndent() {
 		text_.append(indent_);
 	}
 	
-	private void endLine() {
+	private void nextLine() {
 		text_.append('\n');
 	}
 	
@@ -44,46 +42,46 @@ public class AstNodePrinter {
 		text_.append(str);
 	}
 	
-	public void begin() {
-		indent();
-		makeIndent();
-		beginLine();
+	public void beginBlock(String title) {
+		increaseIndent();
+		print(title);
+		print(' ');
 		print('{');
-		endLine();
+		nextLine();
 	}
 	
-	public void title(String name) {
+	public void beginBlock() {
+		increaseIndent();
+		print('{');
+		nextLine();
+	}
+	
+	public void text(String name) {
 		print(name);
 		print(' ');
-	}
-	
-	public void titleOnly(String name) {
-		title(name);
-		endLine();
+		nextLine();
 	}
 	
 	public void property(String property, String value) {
-		beginLine();
+		printIndent();
 		print(property);
-		print(" = ");
+		print(" := ");
 		print(value);
-		endLine();
+		nextLine();
 	}
 	
 	public void child(String property, AstNode child) {
-		beginLine();
+		printIndent();
 		print(property);
-		print(" :: ");
+		print(" := ");
 		child.inspect(this);
-		endLine();
 	}
 	
-	public void end() {
-		unindent();
-		makeIndent();
-		beginLine();
+	public void endBlock() {
+		decreaseIndent();
+		printIndent();
 		print('}');
-		endLine();
+		nextLine();
 	}
 	
 	public String result() {

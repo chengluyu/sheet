@@ -10,10 +10,9 @@ public class ExpressionStatement extends Statement {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("expression statement");
-		printer.begin();
+		printer.beginBlock("expression statement");
 		printer.child("expr", expr_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }

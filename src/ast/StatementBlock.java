@@ -2,7 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 
-import parser.LocalScope;
+import scope.LocalScope;
 
 public class StatementBlock extends Statement {
 
@@ -16,14 +16,13 @@ public class StatementBlock extends Statement {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("statement block");
-		printer.begin();
+		printer.beginBlock("statement block");
 		printer.property("has scope bound",
 				String.valueOf(bundledScope_ != null));
 		printer.property("statement count", String.valueOf(stmts_.size()));
 		for (int i = 0; i < stmts_.size(); i++)
-			printer.child(String.valueOf(i), stmts_.get(i));
-		printer.end();
+			printer.child('[' + String.valueOf(i) + ']', stmts_.get(i));
+		printer.endBlock();
 	}
 
 }

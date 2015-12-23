@@ -10,7 +10,7 @@ public class ContinueStatement extends Statement {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.titleOnly("continue statement");
+		printer.text("continue statement");
 	}
 	
 }

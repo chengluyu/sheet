@@ -16,12 +16,11 @@ public class Assignment extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("assignment");
-		printer.begin();
+		printer.beginBlock("assignment");
 		printer.property("type", op_.literal());
 		printer.child("left", left_);
 		printer.child("right", right_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }

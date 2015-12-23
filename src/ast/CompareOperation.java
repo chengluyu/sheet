@@ -16,12 +16,11 @@ public class CompareOperation extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("compare operation");
-		printer.begin();
+		printer.beginBlock("compare operation");
 		printer.property("type", op_.literal());
 		printer.child("left", left_);
 		printer.child("right", right_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }

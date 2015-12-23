@@ -14,12 +14,12 @@ public class IfStatement extends Statement {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("if statement");
-		printer.begin();
+		printer.beginBlock("if statement");
 		printer.child("condition", cond_);
 		printer.child("then", then_);
-		printer.child("else", else_);
-		printer.end();
+		if (else_ != null)
+			printer.child("else", else_);
+		printer.endBlock();
 	}
 
 }

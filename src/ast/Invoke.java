@@ -12,11 +12,10 @@ public class Invoke extends Expression {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.title("function invoke");
-		printer.begin();
+		printer.beginBlock("function invoke");
 		printer.child("function", func_);
 		printer.child("arguments", args_);
-		printer.end();
+		printer.endBlock();
 	}
 
 }
