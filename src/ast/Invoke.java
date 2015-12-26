@@ -1,5 +1,8 @@
 package ast;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 public class Invoke extends Expression {
 
 	public Invoke(Expression func, ExpressionGroup args) {
@@ -17,5 +20,5 @@ public class Invoke extends Expression {
 		printer.child("arguments", args_);
 		printer.endBlock();
 	}
-
+	
 }

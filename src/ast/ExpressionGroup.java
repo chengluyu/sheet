@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class ExpressionGroup extends Expression {
 
@@ -17,6 +18,10 @@ public class ExpressionGroup extends Expression {
 		for (int i = 0; i < exprs_.size(); i++)
 			printer.child(String.valueOf(i), exprs_.get(i));
 		printer.endBlock();
+	}
+	
+	public Collection<? extends Expression> expressions() {
+		return exprs_;
 	}
 	
 }
