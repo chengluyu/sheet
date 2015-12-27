@@ -4,8 +4,8 @@ import ast.AstNodePrinter;
 
 public class ConstantSymbol extends Symbol {
 
-	public ConstantSymbol(String name) {
-		super(name);
+	public ConstantSymbol(String name, int id) {
+		super(name, id);
 	}
 	
 	@Override

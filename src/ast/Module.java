@@ -1,55 +1,50 @@
 package ast;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 
 import ast.symbol.FunctionSymbol;
 import ast.symbol.Symbol;
-import parser.Parser;
-import scope.ModuleScope;
+import parser.ModuleEnv;
 
 public class Module extends AstNode {
 
-	public Module(Parser parser) {
-		initials_ = new ArrayList<Assignment>();
-		scope_ = new ModuleScope();
-		parser_ = parser;
+	public Module(ArrayList<Assignment> inits, ModuleEnv env) {
+		inits_ = inits;
+		env_ = env;
 	}
 	
-	private ArrayList<Assignment> initials_;
-	private final ModuleScope scope_;
-	private final Parser parser_;
+	private ArrayList<Assignment> inits_;
+	private final ModuleEnv env_;
 	
 	public ArrayList<Assignment> initializations() {
-		return initials_;
+		return inits_;
 	}
 	
-	public ModuleScope scope() {
-		return scope_;
-	}
-	
-	public Parser parser() {
-		return parser_;
-	}
-	
+	public ModuleEnv scope() {
+		return env_;
+	}	
 
 	@Override
 	public void inspect(AstNodePrinter printer) {
 		printer.beginBlock("module");
-		Collection<Symbol> symbols = scope_.symbols();
-		Iterator<Symbol> it = symbols.iterator();
-		while (it.hasNext()) {
-			Symbol symb = it.next();
-			if (symb.isConstant()) {
-				printer.property("constant", symb.name());
-			} else if (symb.isVariable()) {
-				printer.property("variable", symb.name());
-			} else if (symb.isFunction()) {
-				FunctionSymbol fs = (FunctionSymbol) symb;
-				printer.child("function", fs.body());
-			}
+		printer.subBlock("functions");
+		Iterator<FunctionSymbol> itf = env_.functions().iterator();
+		while (itf.hasNext()) {
+			FunctionSymbol fs = itf.next();
+			printer.child(fs.name(), fs);
 		}
+		printer.endBlock();
+		printer.subBlock("locals");
+		Iterator<Symbol> itl = env_.locals().iterator();
+		while (itl.hasNext()) {
+			Symbol symb = itl.next();
+			if (symb.isConstant())
+				printer.property("constant", symb.name());
+			else if (symb.isVariable())
+				printer.property("variable", symb.name());
+		}
+		printer.endBlock();
 		printer.endBlock();
 	}
 

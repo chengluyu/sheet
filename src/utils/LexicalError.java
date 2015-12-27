@@ -1,33 +1,47 @@
 package utils;
 
-public class LexicalError extends ParseException {
+public class LexicalError extends Exception {
+
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7804242313312015440L;
+	private static final long serialVersionUID = -460213305692924689L;
 
 	public LexicalError(Position pos) {
-		super(pos);
+		pos_ = pos;
 	}
 
 	public LexicalError(Position pos, String message) {
-		super(pos, message);
+		super(message);
+		pos_ = pos;
 	}
 
 	public LexicalError(Position pos, Throwable cause) {
-		super(pos, cause);
+		super(cause);
+		pos_ = pos;
 	}
 
 	public LexicalError(Position pos, String message,
 			Throwable cause) {
-		super(pos, message, cause);
+		super(message, cause);
+		pos_ = pos;
 	}
 
 	public LexicalError(Position pos, String message,
-			Throwable cause, boolean enableSuppression,
-			boolean writableStackTrace) {
-		super(pos, message, cause, enableSuppression, writableStackTrace);
+			Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+		pos_ = pos;
 	}
+
+	public Position position() {
+		return pos_;
+	}
+	
+	public String getMessage() {
+		return String.format("%s %s", pos_.toString(), super.getMessage());
+	}
+
+	private Position pos_;
 
 }

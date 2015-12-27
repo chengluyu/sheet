@@ -45,5 +45,9 @@ public class SymbolTable {
 	public Collection<Symbol> symbols() {
 		return symbols_.values();
 	}
+	
+	public SymbolTable parent() {
+		return parent_;
+	}
 
 }

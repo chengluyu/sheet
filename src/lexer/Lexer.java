@@ -10,6 +10,7 @@ public class Lexer {
 		scan_ = scan;
 		row_ = 1;
 		column_ = 1;
+		tokenFactory_ = new TokenFactory(this);
 		ignore();
 	}
 
@@ -18,6 +19,10 @@ public class Lexer {
 	public Token advance() throws LexicalError {
 		return scan();
 	}
+	
+	// Token factory
+	
+	private TokenFactory tokenFactory_;
 
 	// Position records
 
@@ -64,11 +69,11 @@ public class Lexer {
 	}
 
 	private Token select(Tag tokenTag) {
-		return Token.get(tokenTag);
+		return tokenFactory_.get(tokenTag);
 	}
 	
 	private Token select(char cond, Tag then, Tag otherwise) {
-		return Token.get(match(cond) ? then : otherwise);
+		return tokenFactory_.get(match(cond) ? then : otherwise);
 	}
 
 	private boolean isBinDigit() {
@@ -297,7 +302,7 @@ public class Lexer {
 	
 	private Token scanInteger(String literal, int base) throws LexicalError {
 		try {
-			return Token.literal(Integer.parseInt(literal, base));
+			return tokenFactory_.literal(Integer.parseInt(literal, base));
 		} catch (NumberFormatException e) {
 			throw new LexicalError(position(), e.getMessage());
 		}
@@ -318,8 +323,8 @@ public class Lexer {
 		}
 
 		if (fraction.equals("") && exponent.equals(""))
-			return Token.literal(Integer.parseInt(integer));
-		return Token.literal(Double.parseDouble(String.format("%s.%s%s", 
+			return tokenFactory_.literal(Integer.parseInt(integer));
+		return tokenFactory_.literal(Double.parseDouble(String.format("%s.%s%s", 
 				integer, fraction, exponent)));
 	}
 	
@@ -333,7 +338,7 @@ public class Lexer {
 			else
 				sb.append(scanDigits());
 		}
-		return Token.literal(Double.parseDouble(sb.toString()));
+		return tokenFactory_.literal(Double.parseDouble(sb.toString()));
 	}
 
 	// String literal
@@ -346,7 +351,7 @@ public class Lexer {
 			else
 				sb.append(next());
 		}
-		return Token.literal(sb.toString());
+		return tokenFactory_.literal(sb.toString());
 	}
 
 	private void scanStringEscape(StringBuilder sb) throws LexicalError {
@@ -402,7 +407,7 @@ public class Lexer {
 			ch = next();
 
 		expect('\'');
-		return Token.literal(ch);
+		return tokenFactory_.literal(ch);
 	}
 
 	private char scanCharEscape() throws LexicalError {
@@ -439,8 +444,8 @@ public class Lexer {
 
 	private Token scanIdentifierOrKeyword(char firstChar) {
 		String id = scanIdentifier(firstChar);
-		return Token.isKeyword(id) ?
-				Token.getKeywordToken(id) : Token.identifier(id);
+		return TokenFactory.isKeyword(id) ?
+				tokenFactory_.keyword(id) : tokenFactory_.identifier(id);
 	}
 
 }

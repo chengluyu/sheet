@@ -5,15 +5,17 @@ import ast.SymbolReference;
 
 public abstract class Symbol extends AstNode {
 
-	public Symbol(String name) {
+	public Symbol(String name, int id) {
 		name_ = name;
 		ref_ = new SymbolReference(this);
 		refCount_ = 0;
+		id_ = id;
 	}
 	
 	private int refCount_;
 	private SymbolReference ref_;
 	private String name_;
+	private int id_;
 	
 	// Properties
 	
@@ -28,6 +30,10 @@ public abstract class Symbol extends AstNode {
 	
 	public String name() {
 		return name_;
+	}
+	
+	public int id() {
+		return id_;
 	}
 	
 	public boolean isConstant() {

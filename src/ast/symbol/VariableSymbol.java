@@ -4,8 +4,8 @@ import ast.AstNodePrinter;
 
 public class VariableSymbol extends Symbol {
 
-	public VariableSymbol(String name) {
-		super(name);
+	public VariableSymbol(String name, int id) {
+		super(name, id);
 	}
 	
 	@Override

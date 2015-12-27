@@ -4,8 +4,7 @@ import java.util.ArrayList;
 
 import lexer.Tag;
 import lexer.Token;
-import scope.LocalScope;
-import ast.symbol.Symbol;
+import parser.ModuleEnv;
 
 public class AstNodeFactory {
 
@@ -119,13 +118,16 @@ public class AstNodeFactory {
 		return new ReturnStatement(ret);
 	}
 	
-	public StatementBlock newStatementBlock(ArrayList<Statement> stmts,
-			LocalScope boundScope) {
-		return new StatementBlock(stmts, boundScope);
+	public StatementBlock newStatementBlock(ArrayList<Statement> stmts) {
+		return new StatementBlock(stmts);
 	}
 	
 	public WhileStatement newWhileStatement() {
 		return new WhileStatement();
+	}
+	
+	public Module newModule(ArrayList<Assignment> inits, ModuleEnv en) {
+		return new Module(inits, en);
 	}
 
 }

@@ -2,23 +2,17 @@ package ast;
 
 import java.util.ArrayList;
 
-import scope.LocalScope;
-
 public class StatementBlock extends Statement {
 
-	public StatementBlock(ArrayList<Statement> stmts, LocalScope bundledScope) {
+	public StatementBlock(ArrayList<Statement> stmts) {
 		stmts_ = stmts;
-		bundledScope_ = bundledScope;
 	}
 	
 	private ArrayList<Statement> stmts_;
-	private LocalScope bundledScope_;
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
 		printer.beginBlock("statement block");
-		printer.property("has scope bound",
-				String.valueOf(bundledScope_ != null));
 		printer.property("statement count", String.valueOf(stmts_.size()));
 		for (int i = 0; i < stmts_.size(); i++)
 			printer.child('[' + String.valueOf(i) + ']', stmts_.get(i));

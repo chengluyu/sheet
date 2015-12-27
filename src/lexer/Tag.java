@@ -3,6 +3,8 @@ package lexer;
 public enum Tag {
 
 	EOS("end of source", TokenType.EOS),
+	
+	ILLEGAL("illegal", TokenType.ILLEGAL),
 
 	LPAREN("(", TokenType.OPERATOR, Tag.LBP_REFINEMENT),
 	RPAREN(")", TokenType.OPERATOR),
@@ -120,7 +122,7 @@ public enum Tag {
 
 	// Left binding powers
 
-	private static final int LBP_NONE = 0;
+	private static final int LBP_NONE = -1;
 	private static final int LBP_COMMA = 0;
 	private static final int LBP_ASSIGNMENT = 20;
 	private static final int LBP_CONDITIONAL = 30;

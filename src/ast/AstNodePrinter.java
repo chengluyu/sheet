@@ -42,6 +42,15 @@ public class AstNodePrinter {
 		text_.append(str);
 	}
 	
+	public void subBlock(String title) {
+		printIndent();
+		increaseIndent();
+		print(title);
+		print(' ');
+		print('{');
+		nextLine();
+	}
+	
 	public void beginBlock(String title) {
 		increaseIndent();
 		print(title);
