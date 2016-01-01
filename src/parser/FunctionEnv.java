@@ -66,6 +66,8 @@ public class FunctionEnv extends Environment {
 	public Symbol lookup(String name) {
 		Symbol symb = local_.find(name);
 		if (symb == null)
+			symb = arguments_.find(name);
+		if (symb == null)
 			symb = moduleEnv_.lookup(name);
 		return symb;
 	}
