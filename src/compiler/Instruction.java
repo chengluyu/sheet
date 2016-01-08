@@ -2,8 +2,28 @@ package compiler;
 
 public class Instruction {
 
-	public Instruction() {
-		// TODO Auto-generated constructor stub
+	public Instruction(OpCode opc) {
+		this(opc, 0);
+	}
+	
+	public Instruction(OpCode opc, int opr) {
+		opCode_ = opc;
+		operand_ = opr;
+	}
+	
+	private final OpCode opCode_;
+	private int operand_;
+	
+	public OpCode opcode() {
+		return opCode_;
+	}
+	
+	public int operand() {
+		return operand_;
+	}
+	
+	public void setOperand(int i) {
+		operand_ = i;
 	}
 
 }

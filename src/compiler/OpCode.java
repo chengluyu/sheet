@@ -45,5 +45,5 @@ public enum OpCode {
 	STGLOB,
 	STLOC,
 	// Stack control
-	POP,
+	POP
 }
