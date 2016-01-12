@@ -2,6 +2,7 @@ package runtime;
 
 import java.util.Iterator;
 
+import compiler.CodeSegment;
 import compiler.Instruction;
 
 public class VirtualMachine {
@@ -11,18 +12,36 @@ public class VirtualMachine {
 	}
 	
 	private ModuleInfo module_;
-	private EvaluationStack stack_;
+	private RuntimeObject[] globals_;
+	private StackFrame frame_;
 	
 	public void load(ModuleInfo module) {
 		module_ = module;
+		stack_ = new EvaluationStack();
+		globals_ = new RuntimeObject[module_.getGlobalFieldCount()];
+		frame_ = new StackFrame();
 	}
 	
 	public void run() {
-		FunctionInfo entry = module_.entryPoint();
+		CodeSegment prelogue = module_.prelogue();
+		execute(prelogue.iterator());
 		
+		FunctionInfo entry = module_.entryPoint();
 		if (entry == null) {
-			return 
+			System.out.println("No entry point");
+			// TODO raise error here
+		} else {
+			invoke(entry, null);
 		}
+	}
+	
+	private void invoke(FunctionInfo fn, RuntimeObject[] args) {
+		// stage a new function environment in following steps:
+		// 1. create a new stack frame
+		// 2. 
+		stack_.enter();
+		
+		stack_.leave();
 	}
 	
 	private void execute(Iterator<Instruction> it) {
@@ -30,6 +49,7 @@ public class VirtualMachine {
 			Instruction ins = it.next();
 			switch (ins.opcode()) {
 			case ADD:
+				
 				break;
 			case AND:
 				break;
@@ -58,6 +78,7 @@ public class VirtualMachine {
 			case BRTRUE:
 				break;
 			case CALL:
+				invoke(module_.getFunctionByIndex(ins.operand()));
 				break;
 			case DIV:
 				break;
