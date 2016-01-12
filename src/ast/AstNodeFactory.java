@@ -40,7 +40,7 @@ public class AstNodeFactory {
 		return new ArrayLiteral(elems);
 	}
 
-	public UnsolvedReference newUnsolvedReference(String symb) {
+	public SymbolReference newUnsolvedReference(String symb) {
 		return new UnsolvedReference(symb);
 	}
 	

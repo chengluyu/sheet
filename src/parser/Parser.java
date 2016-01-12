@@ -3,9 +3,7 @@ package parser;
 import java.util.ArrayList;
 
 import ast.*;
-import ast.symbol.ConstantSymbol;
-import ast.symbol.Symbol;
-import ast.symbol.VariableSymbol;
+import ast.symbol.*;
 import lexer.*;
 import utils.LexicalError;
 import utils.SyntaxError;
@@ -194,7 +192,7 @@ public class Parser {
 		String id = expectIdentifier();
 		expect(Tag.ASSIGN);
 		Expression expr = parseExpression();
-		ConstantSymbol symb = currentEnv_.defineConstant(id);
+		LocalSymbol symb = currentEnv_.defineConstant(id);
 		return astNodeFactory_.newAssignment(Tag.INIT_CONST, symb.reference(),
 				expr);
 	}
@@ -241,7 +239,7 @@ public class Parser {
 		Expression expr = null;
 		if (match(Tag.ASSIGN))
 			expr = parseExpression();
-		VariableSymbol symb = currentEnv_.defineVariable(id);
+		LocalSymbol symb = currentEnv_.defineVariable(id);
 		if (expr == null)
 			return null;
 		else
@@ -609,7 +607,7 @@ public class Parser {
 		return astNodeFactory_.newUnaryOperation(op.tag(), expr);
 	}
 	
-	private Reference parseReference() throws LexicalError, SyntaxError {
+	private SymbolReference parseReference() throws LexicalError, SyntaxError {
 		// Reference :: Identifier
 		String id = expectIdentifier();
 		Symbol symb = currentEnv_.lookup(id);

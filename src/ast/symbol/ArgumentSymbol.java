@@ -2,14 +2,14 @@ package ast.symbol;
 
 import ast.AstNodePrinter;
 
-public class ConstantSymbol extends Symbol {
+public class ArgumentSymbol extends Symbol {
 
-	public ConstantSymbol(String name, int id) {
+	public ArgumentSymbol(String name, int id) {
 		super(name, id);
 	}
-	
+
 	@Override
-	public boolean isConstant() {
+	public boolean isArgument() {
 		return true;
 	}
 

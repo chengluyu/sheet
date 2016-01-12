@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import ast.StatementBlock;
-import ast.symbol.ConstantSymbol;
+import ast.symbol.LocalSymbol;
 import ast.symbol.FunctionSymbol;
 import ast.symbol.Symbol;
 import ast.symbol.SymbolTable;
-import ast.symbol.VariableSymbol;
 
 public class ModuleEnv extends Environment {
 
@@ -37,8 +36,8 @@ public class ModuleEnv extends Environment {
 	}
 
 	@Override
-	public ConstantSymbol defineConstant(String name) {
-		ConstantSymbol cs = new ConstantSymbol(name, localSymbols_.size());
+	public LocalSymbol defineConstant(String name) {
+		LocalSymbol cs = new LocalSymbol(name, localSymbols_.size(), true);
 		localSymbols_.add(cs);
 		local_.insert(cs);
 		return cs;
@@ -53,8 +52,8 @@ public class ModuleEnv extends Environment {
 	}
 
 	@Override
-	public VariableSymbol defineVariable(String name) {
-		VariableSymbol vs = new VariableSymbol(name, localSymbols_.size());
+	public LocalSymbol defineVariable(String name) {
+		LocalSymbol vs = new LocalSymbol(name, localSymbols_.size(), false);
 		localSymbols_.add(vs);
 		local_.insert(vs);
 		return vs;

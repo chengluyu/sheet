@@ -22,6 +22,8 @@ public enum OpCode {
 	GT,
 	LTE,
 	GTE,
+	NOT,
+	BIT_NOT,
 	// Branch (with one operand)
 	BR,
 	BRTRUE,
@@ -37,6 +39,7 @@ public enum OpCode {
 	RET,
 	// Load
 	LDARG,
+	LDELEM,
 	LDGLOB,
 	LDLOC,
 	LDSTATIC,

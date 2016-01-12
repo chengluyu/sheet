@@ -3,10 +3,10 @@ package parser;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import ast.symbol.ConstantSymbol;
+import ast.symbol.ArgumentSymbol;
+import ast.symbol.LocalSymbol;
 import ast.symbol.Symbol;
 import ast.symbol.SymbolTable;
-import ast.symbol.VariableSymbol;
 
 public class FunctionEnv extends Environment {
 
@@ -33,9 +33,9 @@ public class FunctionEnv extends Environment {
 	}
 	
 	public void defineArgument(String name) {
-		VariableSymbol vs = new VariableSymbol(name, argSymbols_.size());
-		argSymbols_.add(vs);
-		arguments_.insert(vs);
+		ArgumentSymbol as = new ArgumentSymbol(name, argSymbols_.size());
+		argSymbols_.add(as);
+		arguments_.insert(as);
 	}
 	
 	public Collection<Symbol> arguments() {
@@ -47,16 +47,16 @@ public class FunctionEnv extends Environment {
 	}
 	
 	@Override
-	public ConstantSymbol defineConstant(String name) {
-		ConstantSymbol cs = new ConstantSymbol(name, localSymbols_.size());
+	public LocalSymbol defineConstant(String name) {
+		LocalSymbol cs = new LocalSymbol(name, localSymbols_.size(), true);
 		localSymbols_.add(cs);
 		local_.insert(cs);
 		return cs;
 	}
 	
 	@Override
-	public VariableSymbol defineVariable(String name) {
-		VariableSymbol vs = new VariableSymbol(name, localSymbols_.size());
+	public LocalSymbol defineVariable(String name) {
+		LocalSymbol vs = new LocalSymbol(name, localSymbols_.size(), false);
 		localSymbols_.add(vs);
 		local_.insert(vs);
 		return vs;

@@ -8,23 +8,16 @@ public abstract class Symbol extends AstNode {
 	public Symbol(String name, int id) {
 		name_ = name;
 		ref_ = new SymbolReference(this);
-		refCount_ = 0;
 		id_ = id;
 	}
 	
-	private int refCount_;
 	private SymbolReference ref_;
 	private String name_;
 	private int id_;
 	
 	// Properties
 	
-	public int refCount() {
-		return refCount_;
-	}
-	
 	public SymbolReference reference() {
-		refCount_++;
 		return ref_;
 	}
 	
@@ -45,6 +38,18 @@ public abstract class Symbol extends AstNode {
 	}
 	
 	public boolean isVariable() {
+		return false;
+	}
+	
+	public boolean isGlobal() {
+		return false;
+	}
+	
+	public boolean isLocal() {
+		return false;
+	}
+	
+	public boolean isArgument() {
 		return false;
 	}
 
