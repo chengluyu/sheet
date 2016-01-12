@@ -8,7 +8,9 @@ import compiler.Instruction;
 public class VirtualMachine {
 
 	public VirtualMachine() {
-		// TODO Auto-generated constructor stub
+		module_ = null;
+		globals_ = null;
+		frame_ = null;
 	}
 	
 	private ModuleInfo module_;
@@ -17,7 +19,6 @@ public class VirtualMachine {
 	
 	public void load(ModuleInfo module) {
 		module_ = module;
-		stack_ = new EvaluationStack();
 		globals_ = new RuntimeObject[module_.getGlobalFieldCount()];
 		frame_ = new StackFrame();
 	}
@@ -35,16 +36,46 @@ public class VirtualMachine {
 		}
 	}
 	
+	/**
+	 * Create and enter a new stack frame.
+	 */
+	private void enter(int localCount, RuntimeObject[] args) {
+		frame_ = new StackFrame(frame_, localCount, args);
+	}
+	
+	/**
+	 * Leave current stack frame.
+	 */
+	private void leave() {
+		frame_ = frame_.previous();
+	}
+	
 	private void invoke(FunctionInfo fn, RuntimeObject[] args) {
-		// stage a new function environment in following steps:
-		// 1. create a new stack frame
-		// 2. 
-		stack_.enter();
-		
-		stack_.leave();
+		enter(fn.localCount(), args);
+		execute(fn.iterator());
+		RuntimeObject ret = frame_.empty() ? new RuntimeNull() : frame_.pop();
+		leave();
+		frame_.push(ret);
+	}
+	
+	/**
+	 * Collects arguments from evaluation stack.
+	 * @param fn The function will be applied.
+	 * @return Arguments.
+	 */
+	private RuntimeObject[] collectArguments(FunctionInfo fn) {
+		int count = fn.argumentCount();
+		RuntimeObject[] args = new RuntimeObject[count];
+		for (int i = count - 1; i >= 0; i--) {
+			args[i] = frame_.pop();
+		}
+		return args;
 	}
 	
 	private void execute(Iterator<Instruction> it) {
+		StackFrame stack = frame_;
+		RuntimeObject[] locals = frame_.locals();
+		RuntimeObject[] args = frame_.arguments();
 		while (it.hasNext()) {
 			Instruction ins = it.next();
 			switch (ins.opcode()) {
@@ -77,8 +108,11 @@ public class VirtualMachine {
 				break;
 			case BRTRUE:
 				break;
-			case CALL:
-				invoke(module_.getFunctionByIndex(ins.operand()));
+			case CALL: {
+				FunctionInfo fn = module_.getFunctionByIndex(ins.operand());
+				RuntimeObject[] newArgs = collectArguments(fn);
+				invoke(fn, newArgs);
+				}
 				break;
 			case DIV:
 				break;
@@ -113,7 +147,7 @@ public class VirtualMachine {
 			case POP:
 				break;
 			case RET:
-				break;
+				return;
 			case SAR:
 				break;
 			case SHL:

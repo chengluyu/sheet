@@ -39,5 +39,9 @@ public class StackFrame {
 	public RuntimeObject[] locals() {
 		return locals_;
 	}
+	
+	public StackFrame previous() {
+		return previous_;
+	}
 
 }
