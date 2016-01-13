@@ -2,6 +2,9 @@ package ast;
 
 import java.util.ArrayList;
 
+import compiler.ExpressionCompiler;
+import utils.CompileError;
+
 public class ArrayLiteral extends Literal {
 
 	public ArrayLiteral(ArrayList<Expression> elems) {
@@ -21,6 +24,11 @@ public class ArrayLiteral extends Literal {
 		for (int i = 0; i < elems_.size(); i++)
 			printer.child(String.valueOf(i), elems_.get(i));
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(ExpressionCompiler compiler) throws CompileError {
+		throw new CompileError("unimplement routine: ArrayLiteral");
 	}
 
 }

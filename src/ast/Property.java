@@ -1,5 +1,8 @@
 package ast;
 
+import compiler.ExpressionCompiler;
+import utils.CompileError;
+
 public class Property extends Expression {
 
 	public Property(Expression expr, String prop) {
@@ -16,6 +19,11 @@ public class Property extends Expression {
 		printer.child("object", expr_);
 		printer.property("property name", prop_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(ExpressionCompiler compiler) throws CompileError {
+		throw new CompileError("unimplemented compile routine: Property");
 	}
 
 }

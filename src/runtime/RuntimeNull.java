@@ -3,7 +3,7 @@ package runtime;
 public class RuntimeNull extends RuntimeObject {
 
 	public RuntimeNull() {
-		// TODO Auto-generated constructor stub
+		
 	}
 
 	@Override

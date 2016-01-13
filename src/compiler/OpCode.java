@@ -47,6 +47,7 @@ public enum OpCode {
 	STARG,
 	STGLOB,
 	STLOC,
+	STELEM,
 	// Stack control
 	POP
 }

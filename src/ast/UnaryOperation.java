@@ -1,6 +1,8 @@
 package ast;
 
+import compiler.ExpressionCompiler;
 import lexer.Tag;
+import utils.CompileError;
 
 public class UnaryOperation extends Expression {
 	
@@ -18,6 +20,12 @@ public class UnaryOperation extends Expression {
 		printer.property("operator", op_.literal());
 		printer.child("operand", operand_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(ExpressionCompiler compiler) throws CompileError {
+		operand_.compile(compiler);
+		compiler.emitByTag(op_);
 	}
 	
 }

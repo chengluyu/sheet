@@ -1,5 +1,9 @@
 package ast;
 
+import compiler.ExpressionCompiler;
+import compiler.Instruction;
+import utils.CompileError;
+
 public class Conditional extends Expression {
 
 	public Conditional(Expression cond, Expression then, Expression otherwise) {
@@ -19,6 +23,15 @@ public class Conditional extends Expression {
 		printer.child("then", then_);
 		printer.child("else", else_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(ExpressionCompiler compiler) throws CompileError {
+		cond_.compile(compiler);
+		Instruction br = compiler.branchFalse();
+		then_.compile(compiler);
+		br.setOperand(compiler.nextPosition());
+		else_.compile(compiler);
 	}
 
 }

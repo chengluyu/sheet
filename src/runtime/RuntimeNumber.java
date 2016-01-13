@@ -1,13 +1,9 @@
 package runtime;
 
 public class RuntimeNumber extends RuntimeObject {
-
-	public RuntimeNumber() {
-		
-	}
 	
 	public RuntimeNumber(double value) {
-		
+		value_ = value;
 	}
 	
 	private double value_;

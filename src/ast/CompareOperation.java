@@ -1,6 +1,8 @@
 package ast;
 
+import compiler.ExpressionCompiler;
 import lexer.Tag;
+import utils.CompileError;
 
 public class CompareOperation extends Expression {
 
@@ -21,6 +23,13 @@ public class CompareOperation extends Expression {
 		printer.child("left", left_);
 		printer.child("right", right_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(ExpressionCompiler compiler) throws CompileError {
+		left_.compile(compiler);
+		right_.compile(compiler);
+		compiler.emitByTag(op_);
 	}
 
 }

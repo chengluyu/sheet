@@ -21,17 +21,12 @@ public class AstNodeFactory {
 			data = tok.data();
 			break;
 		case NULL_LITERAL:
-			data = "null"; // TODO change here
-			break;
 		case TRUE_LITERAL:
-			data = new Boolean(true);
-			break;
 		case FALSE_LITERAL:
-			data = new Boolean(false);
+			data = null;
 			break;
 		default:
 			return null;
-			// TODO add error handler here
 		}
 		return new ValueLiteral(tok.tag(), data);
 	}
@@ -40,8 +35,8 @@ public class AstNodeFactory {
 		return new ArrayLiteral(elems);
 	}
 
-	public SymbolReference newUnsolvedReference(String symb) {
-		return new UnsolvedReference(symb);
+	public SymbolReference newUnsolvedReference(String symb, ModuleEnv env) {
+		return new SymbolReference(symb, env);
 	}
 	
 	// Expressions

@@ -3,6 +3,9 @@ package ast;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import compiler.ExpressionCompiler;
+import utils.CompileError;
+
 public class ExpressionGroup extends Expression {
 
 	public ExpressionGroup(ArrayList<? extends Expression> exprs) {
@@ -22,6 +25,11 @@ public class ExpressionGroup extends Expression {
 	
 	public Collection<? extends Expression> expressions() {
 		return exprs_;
+	}
+
+	@Override
+	public void compile(ExpressionCompiler compiler) throws CompileError {
+		throw new CompileError("try to compile expression group");
 	}
 	
 }

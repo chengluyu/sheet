@@ -4,17 +4,15 @@ import java.util.HashMap;
 
 import lexer.Tag;
 
-public class ExpressionCompiler {
+public class ExpressionCompiler extends Compiler {
 
 	public ExpressionCompiler(CodeGenerator gen) {
-		gen_ = gen;
+		super(gen);
 	}
-	
-	private CodeGenerator gen_;
 	
 	public boolean emitByTag(Tag tag) {
 		if (correspond_.containsKey(tag)) {
-			gen_.emit(correspond_.get(tag));
+			emit(correspond_.get(tag));
 			return true;
 		} else {
 			return false;
@@ -22,27 +20,47 @@ public class ExpressionCompiler {
 	}
 	
 	public void call(int index) {
-		gen_.emit(OpCode.CALL, index);
+		emit(OpCode.CALL, index);
 	}
 	
 	public void loadArgument(int index) {
-		gen_.emit(OpCode.LDARG, index);
+		emit(OpCode.LDARG, index);
 	}
 	
 	public void loadLocal(int index) {
-		gen_.emit(OpCode.LDLOC, index);
+		emit(OpCode.LDLOC, index);
 	}
 	
 	public void loadGlobal(int index) {
-		gen_.emit(OpCode.LDGLOB, index);
+		emit(OpCode.LDGLOB, index);
 	}
 	
 	public void loadStatic(int index) {
-		gen_.emit(OpCode.LDSTATIC, index);
+		emit(OpCode.LDSTATIC, index);
 	}
 	
 	public void loadElement() {
-		gen_.emit(OpCode.LDELEM);
+		emit(OpCode.LDELEM);
+	}
+	
+	public void storeArgument(int index) {
+		emit(OpCode.STARG, index);
+	}
+	
+	public void storeLocal(int index) {
+		emit(OpCode.STLOC, index);
+	}
+	
+	public void storeGlobal(int index) {
+		emit(OpCode.STGLOB, index);
+	}
+	
+	public void storeElement() {
+		emit(OpCode.STELEM);
+	}
+	
+	public Instruction branchFalse() {
+		return emit(OpCode.BRFALSE);
 	}
 	
 	private static final HashMap<Tag, OpCode> correspond_ =

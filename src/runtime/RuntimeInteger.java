@@ -2,9 +2,11 @@ package runtime;
 
 public class RuntimeInteger extends RuntimeObject {
 
-	public RuntimeInteger() {
-		// TODO Auto-generated constructor stub
+	public RuntimeInteger(int value) {
+		value_ = value;
 	}
+	
+	private int value_;
 	
 	@Override
 	public boolean isInteger() {

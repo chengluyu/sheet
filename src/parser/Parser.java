@@ -611,8 +611,9 @@ public class Parser {
 		// Reference :: Identifier
 		String id = expectIdentifier();
 		Symbol symb = currentEnv_.lookup(id);
-		return symb == null ?
-				astNodeFactory_.newUnsolvedReference(id) : symb.reference();
+		return symb == null 
+				? astNodeFactory_.newUnsolvedReference(id, moduleEnv_) 
+				: symb.reference();
 	}
 
 	private Expression parseLeftDenotation(Expression left)
