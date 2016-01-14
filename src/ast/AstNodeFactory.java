@@ -18,7 +18,7 @@ public class AstNodeFactory {
 		case STRING_LITERAL:
 		case INTEGER:
 		case NUMBER:
-			data = tok.data();
+			data = tok.data(); // tok.data() are primitive types
 			break;
 		case NULL_LITERAL:
 		case TRUE_LITERAL:

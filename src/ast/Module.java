@@ -21,7 +21,7 @@ public class Module extends AstNode {
 		return inits_;
 	}
 	
-	public ModuleEnv scope() {
+	public ModuleEnv module() {
 		return env_;
 	}	
 
@@ -36,7 +36,7 @@ public class Module extends AstNode {
 		}
 		printer.endBlock();
 		printer.subBlock("locals");
-		Iterator<Symbol> itl = env_.locals().iterator();
+		Iterator<Symbol> itl = env_.globals().iterator();
 		while (itl.hasNext()) {
 			Symbol symb = itl.next();
 			if (symb.isConstant())

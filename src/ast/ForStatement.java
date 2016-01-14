@@ -1,5 +1,10 @@
 package ast;
 
+import compiler.ExpressionCompiler;
+import compiler.Instruction;
+import compiler.StatementCompiler;
+import utils.CompileError;
+
 public class ForStatement extends IterationStatement {
 
 	public ForStatement() {
@@ -30,6 +35,24 @@ public class ForStatement extends IterationStatement {
 		printer.child("incremental", incr_);
 		printer.child("body", body_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(StatementCompiler compiler) throws CompileError {
+		ExpressionCompiler ec = compiler.getExpressionCompiler();
+		init_.compile(ec);
+		compiler.pop();
+		int start = compiler.nextPosition();
+		super.setStartPosition(start);
+		cond_.compile(ec);
+		Instruction ins = compiler.branchFalse();
+		body_.compile(compiler);
+		incr_.compile(ec);
+		compiler.pop();
+		compiler.branch(start);
+		int end = compiler.nextPosition();
+		ins.setOperand(end);
+		super.fillBreak(end);
 	}
 
 }

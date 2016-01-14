@@ -28,16 +28,16 @@ public class ValueLiteral extends Literal {
 		RuntimeObject obj;
 		switch (type_) {
 		case CHAR_LITERAL:
-			obj = new RuntimeCharacter((Character) data_);
+			obj = new RuntimeCharacter((char) data_);
 			break;
 		case STRING_LITERAL:
 			obj = new RuntimeString((String) data_);
 			break;
 		case INTEGER:
-			obj = new RuntimeInteger((Integer) data_);
+			obj = new RuntimeInteger((int) data_);
 			break;
 		case NUMBER:
-			obj = new RuntimeNumber((Double) data_);
+			obj = new RuntimeNumber((double) data_);
 			break;
 		case NULL_LITERAL:
 			obj = new RuntimeNull();

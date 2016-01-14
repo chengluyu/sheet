@@ -43,6 +43,7 @@ public enum OpCode {
 	LDGLOB,
 	LDLOC,
 	LDSTATIC,
+	LDNULL,
 	// Store
 	STARG,
 	STGLOB,

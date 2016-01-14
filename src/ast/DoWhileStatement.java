@@ -1,5 +1,9 @@
 package ast;
 
+import compiler.Instruction;
+import compiler.StatementCompiler;
+import utils.CompileError;
+
 public class DoWhileStatement extends IterationStatement {
 
 	public DoWhileStatement() {
@@ -20,6 +24,18 @@ public class DoWhileStatement extends IterationStatement {
 		printer.child("condition", cond_);
 		printer.child("body", body_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(StatementCompiler compiler) throws CompileError {
+		int start = compiler.nextPosition();
+		super.setStartPosition(start);
+		body_.compile(compiler);
+		cond_.compile(compiler.getExpressionCompiler());
+		Instruction ins = compiler.branchTrue();
+		int end = compiler.nextPosition();
+		ins.setOperand(start);
+		super.fillBreak(end);
 	}
 
 }

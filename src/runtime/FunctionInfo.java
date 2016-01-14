@@ -7,8 +7,13 @@ import compiler.Instruction;
 
 public class FunctionInfo {
 
-	public FunctionInfo() {
-		
+	public FunctionInfo(
+			FieldInfo[] arguments,
+			FieldInfo[] locals,
+			CodeSegment code) {
+		arguments_ = arguments;
+		locals_ = locals;
+		byteCode_ = code;
 	}
 	
 	private FieldInfo[] arguments_;

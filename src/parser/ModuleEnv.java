@@ -1,7 +1,6 @@
 package parser;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 import ast.StatementBlock;
 import ast.symbol.LocalSymbol;
@@ -16,10 +15,12 @@ public class ModuleEnv extends Environment {
 		funcSymbols_ = new ArrayList<FunctionSymbol>();
 		local_ = new SymbolTable();
 		functions_ = new SymbolTable();
+		inits_ = null;
 	}
 	
 	private ArrayList<Symbol> localSymbols_;
 	private ArrayList<FunctionSymbol> funcSymbols_;
+	private StatementBlock inits_;
 	private SymbolTable local_;
 	private SymbolTable functions_;
 	
@@ -27,12 +28,20 @@ public class ModuleEnv extends Environment {
 		return local_;
 	}
 	
-	public Collection<Symbol> locals() {
+	public ArrayList<Symbol> globals() {
 		return localSymbols_;
 	}
 	
-	public Collection<FunctionSymbol> functions() {
+	public ArrayList<FunctionSymbol> functions() {
 		return funcSymbols_;
+	}
+
+	public StatementBlock initializations() {
+		return inits_;
+	}
+	
+	public void setInitializations(StatementBlock sb) {
+		inits_ = sb;
 	}
 
 	@Override

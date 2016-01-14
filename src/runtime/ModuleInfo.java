@@ -4,8 +4,14 @@ import compiler.CodeSegment;
 
 public class ModuleInfo {
 
-	public ModuleInfo() {
-		// TODO Auto-generated constructor stub
+	public ModuleInfo(FunctionInfo[] functions,
+			FieldInfo[] globals,
+			FunctionInfo entryPoint,
+			CodeSegment prelogue) {
+		functions_ = functions;
+		globals_ = globals;
+		entryPoint_ = entryPoint;
+		prelogue_ = prelogue;
 	}
 	
 	private FunctionInfo[] functions_;

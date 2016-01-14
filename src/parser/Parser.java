@@ -114,6 +114,13 @@ public class Parser {
 		while (!match(Tag.EOS)) {
 			parseModuleDeclaration();
 		}
+		
+		ArrayList<Statement> stmts = new ArrayList<Statement>();
+		moduleInits_.forEach(x -> {
+			stmts.add(astNodeFactory_.newExpressionStatement(x));
+		});
+		StatementBlock sb = astNodeFactory_.newStatementBlock(stmts);
+		moduleEnv_.setInitializations(sb);
 	}
 
 	// Parse declarations.

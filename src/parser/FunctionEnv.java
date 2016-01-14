@@ -38,11 +38,11 @@ public class FunctionEnv extends Environment {
 		arguments_.insert(as);
 	}
 	
-	public Collection<Symbol> arguments() {
+	public ArrayList<Symbol> arguments() {
 		return argSymbols_;
 	}
 	
-	public Collection<Symbol> locals() {
+	public ArrayList<Symbol> locals() {
 		return localSymbols_;
 	}
 	

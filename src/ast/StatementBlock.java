@@ -2,6 +2,9 @@ package ast;
 
 import java.util.ArrayList;
 
+import compiler.StatementCompiler;
+import utils.CompileError;
+
 public class StatementBlock extends Statement {
 
 	public StatementBlock(ArrayList<Statement> stmts) {
@@ -17,6 +20,12 @@ public class StatementBlock extends Statement {
 		for (int i = 0; i < stmts_.size(); i++)
 			printer.child('[' + String.valueOf(i) + ']', stmts_.get(i));
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(StatementCompiler compiler) throws CompileError {
+		for (int i = 0; i < stmts_.size(); i++)
+			stmts_.get(i).compile(compiler);
 	}
 
 }

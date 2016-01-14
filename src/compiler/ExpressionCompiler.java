@@ -43,6 +43,10 @@ public class ExpressionCompiler extends Compiler {
 		emit(OpCode.LDELEM);
 	}
 	
+	public void loadNull() {
+		emit(OpCode.LDNULL);
+	}
+	
 	public void storeArgument(int index) {
 		emit(OpCode.STARG, index);
 	}

@@ -29,7 +29,7 @@ public class CodeGenerator {
 	}
 	
 	public CodeSegment code() {
-		return new CodeSegment(byteCodes_);
+		return new CodeSegment(byteCodes_, statics_);
 	}
 	
 	public ArrayList<RuntimeObject> statics() {

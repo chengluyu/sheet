@@ -1,5 +1,10 @@
 package ast;
 
+import compiler.ExpressionCompiler;
+import compiler.Instruction;
+import compiler.StatementCompiler;
+import utils.CompileError;
+
 public class IfStatement extends Statement {
 
 	public IfStatement(Expression cond, Statement then, Statement otherwise) {
@@ -20,6 +25,16 @@ public class IfStatement extends Statement {
 		if (else_ != null)
 			printer.child("else", else_);
 		printer.endBlock();
+	}
+
+	@Override
+	public void compile(StatementCompiler compiler) throws CompileError {
+		ExpressionCompiler ec = compiler.getExpressionCompiler();
+		cond_.compile(ec);
+		Instruction ins = compiler.branchFalse();
+		then_.compile(compiler);
+		ins.setOperand(compiler.nextPosition());
+		else_.compile(compiler);
 	}
 
 }
