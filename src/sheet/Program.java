@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import ast.AstNodePrinter;
 import ast.Module;
 import ast.StatementBlock;
-import compiler.ModuleCompiler;
 import lexer.*;
 import parser.Parser;
 import utils.*;
@@ -64,26 +63,26 @@ public class Program {
 	}
 	
 	public static void compileTest(String arg) {
-		try {
-			FileScanner fs = new FileScanner(arg);
-			Lexer lex = new Lexer(fs);
-			Parser parser = new Parser(lex);
-			Module module = parser.parse();
-			ModuleCompiler compiler = new ModuleCompiler();
-			compiler.compile(module.module());
-			System.out.print(compiler.result().inspect());
-		} catch (FileNotFoundException e) {
-			System.out.println("File not found: " + arg);
-		} catch (LexicalError e) {
-			System.out.println("Lexical error: " + e.getMessage());
-			e.printStackTrace();
-		} catch (SyntaxError e) {
-			System.out.println("Syntax error: " + e.getMessage());
-			e.printStackTrace();
-		} catch (CompileError e) {
-			System.out.println("Compile error: " + e.getMessage());
-			e.printStackTrace();
-		}
+//		try {
+//			FileScanner fs = new FileScanner(arg);
+//			Lexer lex = new Lexer(fs);
+//			Parser parser = new Parser(lex);
+//			Module module = parser.parse();
+//			ModuleCompiler compiler = new ModuleCompiler();
+//			compiler.compile(module);
+//			System.out.print(compiler.result().inspect());
+//		} catch (FileNotFoundException e) {
+//			System.out.println("File not found: " + arg);
+//		} catch (LexicalError e) {
+//			System.out.println("Lexical error: " + e.getMessage());
+//			e.printStackTrace();
+//		} catch (SyntaxError e) {
+//			System.out.println("Syntax error: " + e.getMessage());
+//			e.printStackTrace();
+//		} catch (CompileError e) {
+//			System.out.println("Compile error: " + e.getMessage());
+//			e.printStackTrace();
+//		}
 	}
 	
 }

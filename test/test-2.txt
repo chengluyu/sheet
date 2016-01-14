@@ -1,14 +1,17 @@
 let n = 6;
 
 function test() {
-	
-}
-
-function test() {
 	let s = 0;
 	for (let i = 0; i < n; i++)
 		s += i;
 	return s;
+}
+
+function test2() {
+	let s;
+	{
+		let s;
+	}
 }
 
 function abs1(x) {

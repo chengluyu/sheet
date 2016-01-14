@@ -4,11 +4,15 @@ import java.util.ArrayList;
 
 import lexer.Tag;
 import lexer.Token;
-import parser.ModuleEnv;
+import parser.scope.FunctionScope;
+import parser.scope.GlobalScope;
+import parser.symbol.FunctionSymbol;
+import parser.symbol.Symbol;
 
 public class AstNodeFactory {
 
 	public AstNodeFactory() {
+		
 	}
 
 	public Literal newLiteral(Token tok) {
@@ -34,9 +38,13 @@ public class AstNodeFactory {
 	public ArrayLiteral newLiteral(ArrayList<Expression> elems) {
 		return new ArrayLiteral(elems);
 	}
+	
+	public SymbolReference newReference(Symbol symb) {
+		return new SymbolReference(symb);
+	}
 
-	public SymbolReference newUnsolvedReference(String symb, ModuleEnv env) {
-		return new SymbolReference(symb, env);
+	public SymbolReference newUnsolvedReference(String name) {
+		return new SymbolReference(name);
 	}
 	
 	// Expressions
@@ -121,8 +129,18 @@ public class AstNodeFactory {
 		return new WhileStatement();
 	}
 	
-	public Module newModule(ArrayList<Assignment> inits, ModuleEnv en) {
-		return new Module(inits, en);
+	public Module newModule(
+			GlobalScope scope,
+			StatementBlock globalInits,
+			ArrayList<Function> functions) {
+		return new Module(scope, globalInits, functions);
+	}
+
+	public Function newFunction(
+			FunctionSymbol symb,
+			FunctionScope scope,
+			StatementBlock body) {
+		return new Function(symb, scope, body);
 	}
 
 }

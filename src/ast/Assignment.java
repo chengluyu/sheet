@@ -1,6 +1,6 @@
 package ast;
 
-import ast.symbol.Symbol;
+import parser.symbol.Symbol;
 import compiler.ExpressionCompiler;
 import lexer.Tag;
 import utils.CompileError;
@@ -28,27 +28,27 @@ public class Assignment extends Expression {
 
 	@Override
 	public void compile(ExpressionCompiler compiler) throws CompileError {
-		right_.compile(compiler);
-		if (left_ instanceof Index) {
-			Index idx = (Index) left_;
-			idx.value().compile(compiler);
-			idx.refinement().compile(compiler);
-			compiler.storeElement();
-		} else if (left_ instanceof SymbolReference) {
-			SymbolReference sr = (SymbolReference) left_;
-			Symbol symb = sr.symbol();
-			if (symb.isConstant())
-				throw new CompileError("cannot assign a constant");
-			if (symb.isArgument()) {
-				compiler.storeArgument(symb.id());
-			} else if (symb.isLocal()) {
-				compiler.storeLocal(symb.id());
-			} else if (symb.isGlobal()) {
-				compiler.storeGlobal(symb.id());
-			}
-		} else {
-			throw new CompileError("unreachable");
-		}
+//		right_.compile(compiler);
+//		if (left_ instanceof Index) {
+//			Index idx = (Index) left_;
+//			idx.value().compile(compiler);
+//			idx.refinement().compile(compiler);
+//			compiler.storeElement();
+//		} else if (left_ instanceof SymbolReference) {
+//			SymbolReference sr = (SymbolReference) left_;
+//			parser.symbol.Symbol symb = sr.symbol();
+//			if (symb.isConstant())
+//				throw new CompileError("cannot assign a constant");
+//			if (symb.isArgument()) {
+//				compiler.storeArgument(symb.id());
+//			} else if (symb.isLocal()) {
+//				compiler.storeLocal(symb.id());
+//			} else if (symb.isGlobal()) {
+//				compiler.storeGlobal(symb.id());
+//			}
+//		} else {
+//			throw new CompileError("unreachable");
+//		}
 	}
 	
 }
