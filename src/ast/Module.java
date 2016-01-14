@@ -11,14 +11,32 @@ public class Module extends AstNode {
 			GlobalScope scope,
 			StatementBlock globalInits,
 			ArrayList<Function> functions) {
+		scope_ = scope;
 		globalInits_ = globalInits;
 		globals_ = scope.globalSymbols();
 		functions_ = functions;
 	}
 	
+	private GlobalScope scope_;
 	private StatementBlock globalInits_;
 	private ArrayList<Symbol> globals_;
 	private ArrayList<Function> functions_;
+	
+	public GlobalScope scope() {
+		return scope_;
+	}
+	
+	public StatementBlock initialzations() {
+		return globalInits_;
+	}
+	
+	public ArrayList<Symbol> globals() {
+		return globals_;
+	}
+	
+	public ArrayList<Function> functions() {
+		return functions_;
+	}
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {

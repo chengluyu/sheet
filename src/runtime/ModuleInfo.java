@@ -2,33 +2,39 @@ package runtime;
 
 import java.util.Iterator;
 
-import compiler.CodeSegment;
+import compiler.ByteCode;
 import compiler.Instruction;
+import compiler.StaticPool;
 
 public class ModuleInfo {
 
-	public ModuleInfo(FunctionInfo[] functions,
+	public ModuleInfo(
+			StaticPool staticPool,
 			FieldInfo[] globals,
-			FunctionInfo entryPoint,
-			CodeSegment prelogue) {
+			ByteCode prologue,
+			FunctionInfo[] functions,
+			FunctionInfo entryPoint
+			) {
 		functions_ = functions;
 		globals_ = globals;
 		entryPoint_ = entryPoint;
-		prelogue_ = prelogue;
+		prologue_ = prologue;
+		staticPool_ = staticPool;
 	}
 	
 	private FunctionInfo[] functions_;
 	private FieldInfo[] globals_;
 	
 	private FunctionInfo entryPoint_;
-	private CodeSegment prelogue_;
+	private ByteCode prologue_;
+	private StaticPool staticPool_;
 	
 	public FunctionInfo entryPoint() {
 		return entryPoint_;
 	}
 	
-	public CodeSegment prelogue() {
-		return prelogue_;
+	public ByteCode prologue() {
+		return prologue_;
 	}
 	
 	public FunctionInfo getFunctionByIndex(int i) {
@@ -46,7 +52,7 @@ public class ModuleInfo {
 			sb.append(globals_[i].inspect() + '\n');
 		sb.append(")\n");
 		sb.append("prelogue (\n");
-		Iterator<Instruction> it = prelogue_.iterator();
+		Iterator<Instruction> it = prologue_.iterator();
 		for (int i = 0; it.hasNext(); i++) {
 			Instruction ins = it.next();
 			sb.append(i);

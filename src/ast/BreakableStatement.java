@@ -1,23 +1,26 @@
 package ast;
 
-import compiler.FillBack;
-import compiler.Instruction;
+import java.util.ArrayList;
+
+import compiler.Blank;
 
 public abstract class BreakableStatement extends Statement {
 
 	public BreakableStatement() {
-		break_ = new FillBack();
+		blanks_ = new ArrayList<Blank>();
 	}
 	
-	private FillBack break_;
+	private ArrayList<Blank> blanks_;
 	
-	public void addBreakFillBack(Instruction ins) {
-		break_.add(ins);
+	public void addBreak(Blank blank) {
+		blanks_.add(blank);
 	}
 	
 	public void fillBreak(int pos) {
-		break_.fill(pos);
-		break_.clear();
+		blanks_.forEach(x -> {
+			x.fill(pos);
+		});
+		blanks_.clear();
 	}
 
 }

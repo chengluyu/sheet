@@ -1,6 +1,6 @@
 package ast;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class Index extends Expression {
@@ -31,7 +31,7 @@ public class Index extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
 		value_.compile(compiler);
 		refinement_.compile(compiler);
 		compiler.loadElement();

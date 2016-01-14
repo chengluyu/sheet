@@ -1,6 +1,6 @@
 package ast;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class Property extends Expression {
@@ -22,7 +22,7 @@ public class Property extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
 		throw new CompileError("unimplemented compile routine: Property");
 	}
 

@@ -1,6 +1,7 @@
 package ast;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.OpCode;
 import lexer.Tag;
 import utils.CompileError;
 
@@ -26,10 +27,32 @@ public class CompareOperation extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
 		left_.compile(compiler);
 		right_.compile(compiler);
-		compiler.emitByTag(op_);
+		switch (op_) {
+		case EQ:
+			compiler.emit(OpCode.EQ);
+			break;
+		case GT:
+			compiler.emit(OpCode.GT);
+			break;
+		case GTE:
+			compiler.emit(OpCode.GTE);
+			break;
+		case LT:
+			compiler.emit(OpCode.LT);
+			break;
+		case LTE:
+			compiler.emit(OpCode.LTE);
+			break;
+		case NE:
+			compiler.emit(OpCode.NE);
+			break;
+		default:
+			throw new CompileError(
+					"(internal error) unknown compare operation");
+		}
 	}
 
 }

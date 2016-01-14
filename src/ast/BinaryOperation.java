@@ -1,6 +1,7 @@
 package ast;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.OpCode;
 import lexer.Tag;
 import utils.CompileError;
 
@@ -26,10 +27,53 @@ public class BinaryOperation extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
 		left_.compile(compiler);
 		right_.compile(compiler);
-		compiler.emitByTag(op_);
+		switch (op_) {
+		case ADD:
+			compiler.emit(OpCode.ADD);
+			break;
+		case AND:
+			compiler.emit(OpCode.AND);
+			break;
+		case BIT_AND:
+			compiler.emit(OpCode.AND);
+			break;
+		case BIT_OR:
+			compiler.emit(OpCode.OR);
+			break;
+		case BIT_XOR:
+			compiler.emit(OpCode.XOR);
+			break;
+		case DIV:
+			compiler.emit(OpCode.DIV);
+			break;
+		case MOD:
+			compiler.emit(OpCode.MOD);
+			break;
+		case MUL:
+			compiler.emit(OpCode.MUL);
+			break;
+		case OR:
+			compiler.emit(OpCode.OR);
+			break;
+		case SAR:
+			compiler.emit(OpCode.SAR);
+			break;
+		case SHL:
+			compiler.emit(OpCode.SHL);
+			break;
+		case SHR:
+			compiler.emit(OpCode.SHR);
+			break;
+		case SUB:
+			compiler.emit(OpCode.SUB);
+			break;
+		default:
+			throw new CompileError(
+					"(internal error) unknown binary operation");
+		}
 	}
 
 }

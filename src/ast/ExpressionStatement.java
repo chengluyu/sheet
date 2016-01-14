@@ -1,6 +1,7 @@
 package ast;
 
-import compiler.StatementCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.OpCode;
 import utils.CompileError;
 
 public class ExpressionStatement extends Statement {
@@ -19,9 +20,9 @@ public class ExpressionStatement extends Statement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		expr_.compile(compiler.getExpressionCompiler());
-		compiler.pop();
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		expr_.compile(compiler);
+		compiler.emit(OpCode.POP);
 	}
 
 }

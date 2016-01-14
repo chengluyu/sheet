@@ -1,7 +1,7 @@
 package ast;
 
-import compiler.ExpressionCompiler;
-import compiler.StatementCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.OpCode;
 import utils.CompileError;
 
 public class ReturnStatement extends Statement {
@@ -24,13 +24,12 @@ public class ReturnStatement extends Statement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		ExpressionCompiler ec = compiler.getExpressionCompiler();
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
 		if (retValue_ == null) {
-			compiler.ret();
+			compiler.emit(OpCode.RETNULL);
 		} else {
-			retValue_.compile(ec);
-			compiler.ret();
+			retValue_.compile(compiler);
+			compiler.emit(OpCode.RET);
 		}
 	}
 

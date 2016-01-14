@@ -1,7 +1,7 @@
 package ast;
 
-import compiler.ExpressionCompiler;
-import compiler.Instruction;
+import compiler.Blank;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class Conditional extends Expression {
@@ -26,12 +26,14 @@ public class Conditional extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
 		cond_.compile(compiler);
-		Instruction br = compiler.branchFalse();
+		Blank jumpToElse = compiler.branchFalse();
 		then_.compile(compiler);
-		br.setOperand(compiler.nextPosition());
+		Blank jumpToEnd = compiler.branch();
+		jumpToElse.fill(compiler.position());
 		else_.compile(compiler);
+		jumpToEnd.fill(compiler.position());
 	}
 
 }

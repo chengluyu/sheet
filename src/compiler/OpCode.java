@@ -5,9 +5,7 @@ public enum OpCode {
 	// Arithmetic
 	OR,
 	AND,
-	BIT_OR,
-	BIT_XOR,
-	BIT_AND,
+	XOR,
 	SHL,
 	SHR,
 	SAR,
@@ -24,6 +22,9 @@ public enum OpCode {
 	GTE,
 	NOT,
 	BIT_NOT,
+	INC,
+	DEC,
+	NEG,
 	// Branch (with one operand)
 	BR(true),
 	BRTRUE(true),
@@ -31,6 +32,7 @@ public enum OpCode {
 	// Control flow
 	CALL(true),
 	RET,
+	RETNULL,
 	// Load
 	LDARG(true),
 	LDELEM,
@@ -44,6 +46,7 @@ public enum OpCode {
 	STLOC(true),
 	STELEM,
 	// Stack control
+	COPY,
 	POP;
 	
 	private OpCode() {

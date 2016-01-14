@@ -1,7 +1,7 @@
 package ast;
 
 import parser.symbol.Symbol;
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class Invoke extends Expression {
@@ -23,15 +23,16 @@ public class Invoke extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
-//		if (!(func_ instanceof SymbolReference))
-//			throw new CompileError("callee expression must be a function");
-//		SymbolReference sr = (SymbolReference) func_;
-//		if (!sr.resolved()) sr.resolve();
-//		Symbol symb = sr.symbol();
-//		if (!symb.isFunction())
-//			throw new CompileError("callee object must be a function");
-//		compiler.call(symb.id());
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		if (!(func_ instanceof SymbolReference))
+			throw new CompileError("callee expression must be a function");
+		SymbolReference ref = (SymbolReference) func_;
+		if (!ref.resolved())
+			ref.resolve(compiler);
+		Symbol symbol = ref.symbol();
+		if (!symbol.isFunction())
+			throw new CompileError("callee object must be a function");
+		compiler.call(symbol.id());
 	}
 	
 }

@@ -1,6 +1,6 @@
 package ast;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
 import parser.symbol.Symbol;
 import utils.CompileError;
 
@@ -24,7 +24,16 @@ public class SymbolReference extends Literal {
 	}
 	
 	public boolean resolved() {
-		return refSymbol_ != null;
+		return refName_ == null;
+	}
+	
+	public void resolve(ByteCodeCompiler compiler) throws CompileError {
+		refSymbol_ = compiler.module().scope().lookup(refName_);
+		if (refSymbol_ == null)
+			throw new CompileError(String.format(
+					"undefined reference to \"%s\"", refName_));
+		else
+			refName_ = null;
 	}
 	
 	@Override
@@ -35,27 +44,26 @@ public class SymbolReference extends Literal {
 			printer.endBlock();
 		} else {
 			printer.beginBlock("unresolved symbol reference");
-			printer.property("name", refName_);
+			printer.property("name", refSymbol_.name());
 			printer.endBlock();
 		}
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
-//		if (!resolved()) resolve();
-//		
-//		if (refSymbol_.isArgument()) {
-//			compiler.loadArgument(refSymbol_.id());
-//		} else if (refSymbol_.isLocal()) {
-//			compiler.loadLocal(refSymbol_.id());
-//		} else if (refSymbol_.isGlobal()) {
-//			compiler.loadGlobal(refSymbol_.id());
-//		} else if (refSymbol_.isFunction()) {
-//			throw new CompileError("does not support function as object");
-//		} else {
-//			throw new CompileError("unreachable");
-//			// TODO add handler here
-//		}
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		if (!resolved())
+			resolve(compiler);
+		
+		if (refSymbol_.isArgument())
+			compiler.loadArgument(refSymbol_.id());
+		else if (refSymbol_.isGlobal())
+			compiler.loadArgument(refSymbol_.id());
+		else if (refSymbol_.isFunction())
+			throw new CompileError(String.format(
+					"cannot reference the function \"%s\" as a value",
+					refSymbol_.name()));
+		else
+			compiler.loadLocal(refSymbol_.id());
 	}
 
 }

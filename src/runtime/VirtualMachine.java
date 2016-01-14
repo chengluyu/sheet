@@ -2,7 +2,7 @@ package runtime;
 
 import java.util.Iterator;
 
-import compiler.CodeSegment;
+import compiler.ByteCode;
 import compiler.Instruction;
 
 public class VirtualMachine {
@@ -24,7 +24,7 @@ public class VirtualMachine {
 	}
 	
 	public void run() {
-		CodeSegment prelogue = module_.prelogue();
+		ByteCode prelogue = module_.prologue();
 		execute(prelogue.iterator());
 		
 		FunctionInfo entry = module_.entryPoint();
@@ -80,15 +80,8 @@ public class VirtualMachine {
 			Instruction ins = it.next();
 			switch (ins.opcode()) {
 			case ADD:
-				
 				break;
 			case AND:
-				break;
-			case BIT_AND:
-				break;
-			case BIT_OR:
-				break;
-			case BIT_XOR:
 				break;
 			case BR:
 				break;

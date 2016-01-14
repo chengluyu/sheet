@@ -2,8 +2,10 @@ package ast;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.OpCode;
 import utils.CompileError;
 
 public class ExpressionGroup extends Expression {
@@ -28,12 +30,13 @@ public class ExpressionGroup extends Expression {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
-		for (int i = 0; i < exprs_.size() - 1; i++) {
-			exprs_.get(i);
-			compiler.pop();
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		Iterator<? extends Expression> it = exprs_.iterator();
+		while (it.hasNext()) {
+			it.next().compile(compiler);
+			if (it.hasNext())
+				compiler.emit(OpCode.POP);
 		}
-		exprs_.get(exprs_.size() - 1).compile(compiler);
 	}
 	
 }

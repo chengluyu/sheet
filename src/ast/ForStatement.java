@@ -1,8 +1,8 @@
 package ast;
 
-import compiler.ExpressionCompiler;
-import compiler.Instruction;
-import compiler.StatementCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.OpCode;
+import compiler.Blank;
 import utils.CompileError;
 
 public class ForStatement extends IterationStatement {
@@ -38,20 +38,32 @@ public class ForStatement extends IterationStatement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		ExpressionCompiler ec = compiler.getExpressionCompiler();
-		init_.compile(ec);
-		compiler.pop();
-		int start = compiler.nextPosition();
-		super.setStartPosition(start);
-		cond_.compile(ec);
-		Instruction ins = compiler.branchFalse();
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		// initialization
+		init_.compile(compiler);
+		compiler.emit(OpCode.POP);
+		
+		int start = compiler.position();
+		
+		// condition
+		cond_.compile(compiler);
+		
+		// if condition is false, jump to end
+		Blank jumpToEnd = compiler.branchFalse();
+		
+		// body
 		body_.compile(compiler);
-		incr_.compile(ec);
-		compiler.pop();
+		
+		// increment
+		incr_.compile(compiler);
+		compiler.emit(OpCode.POP);
+		
+		// jump to start
 		compiler.branch(start);
-		int end = compiler.nextPosition();
-		ins.setOperand(end);
+		
+		int end = compiler.position();
+		jumpToEnd.fill(end);
+		super.fillContinue(start);
 		super.fillBreak(end);
 	}
 

@@ -1,19 +1,26 @@
 package ast;
 
+import java.util.ArrayList;
+
+import compiler.Blank;
+
 public abstract class IterationStatement extends BreakableStatement {
 
 	public IterationStatement() {
-		
+		blanks_ = new ArrayList<Blank>();
 	}
 	
-	private int start_;
+	private ArrayList<Blank> blanks_;
 	
-	public void setStartPosition(int start) {
-		start_ = start;
+	public void addContinue(Blank blank) {
+		blanks_.add(blank);
 	}
 	
-	public int startPosition() {
-		return start_;
+	public void fillContinue(int pos) {
+		blanks_.forEach(x -> {
+			x.fill(pos);
+		});
+		blanks_.clear();
 	}
 
 }

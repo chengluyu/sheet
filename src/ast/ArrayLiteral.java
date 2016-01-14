@@ -1,8 +1,11 @@
 package ast;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
-import compiler.ExpressionCompiler;
+import compiler.ByteCodeCompiler;
+import runtime.RuntimeArray;
+import runtime.RuntimeObject;
 import utils.CompileError;
 
 public class ArrayLiteral extends Literal {
@@ -27,8 +30,20 @@ public class ArrayLiteral extends Literal {
 	}
 
 	@Override
-	public void compile(ExpressionCompiler compiler) throws CompileError {
-		throw new CompileError("unimplement routine: ArrayLiteral");
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		ArrayList<RuntimeObject> elems = new ArrayList<RuntimeObject>();
+		Iterator<Expression> it = elems_.iterator();
+		while (it.hasNext()) {
+			Expression expr = it.next();
+			if (expr instanceof ValueLiteral) {
+				elems.add(((ValueLiteral) expr).toRuntimeObject());
+			} else {
+				throw new CompileError("only constant array is supported");
+			}
+		}
+		RuntimeArray array = new RuntimeArray(elems);
+		int id = compiler.addStatic(array);
+		compiler.loadStatic(id);
 	}
 
 }

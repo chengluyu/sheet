@@ -1,7 +1,7 @@
 package ast;
 
-import compiler.Instruction;
-import compiler.StatementCompiler;
+import compiler.Blank;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class WhileStatement extends IterationStatement {
@@ -28,16 +28,25 @@ public class WhileStatement extends IterationStatement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		int start = compiler.nextPosition();
-		super.setStartPosition(start);
-		cond_.compile(compiler.getExpressionCompiler());
-		Instruction ins = compiler.branchFalse();
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		int start = compiler.position();
+		
+		// condition
+		cond_.compile(compiler);
+		
+		// if condition is false, jump to end
+		Blank jumpToEnd = compiler.branchFalse();
+		
+		// body
 		body_.compile(compiler);
+		
+		// jump to start
 		compiler.branch(start);
-		int end = compiler.nextPosition();
-		ins.setOperand(end);
+		
+		int end = compiler.position();
+		jumpToEnd.fill(end);
 		super.fillBreak(end);
+		super.fillContinue(start);
 	}
 
 }

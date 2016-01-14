@@ -1,8 +1,9 @@
 package ast;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
-import compiler.StatementCompiler;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class StatementBlock extends Statement {
@@ -23,9 +24,11 @@ public class StatementBlock extends Statement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		for (int i = 0; i < stmts_.size(); i++)
-			stmts_.get(i).compile(compiler);
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		Iterator<Statement> it = stmts_.iterator();
+		while (it.hasNext()) {
+			it.next().compile(compiler);
+		}
 	}
 
 }

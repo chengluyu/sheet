@@ -1,7 +1,7 @@
 package ast;
 
-import compiler.Instruction;
-import compiler.StatementCompiler;
+import compiler.Blank;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class DoWhileStatement extends IterationStatement {
@@ -27,15 +27,22 @@ public class DoWhileStatement extends IterationStatement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		int start = compiler.nextPosition();
-		super.setStartPosition(start);
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		int start = compiler.position();
+		
+		// body
 		body_.compile(compiler);
-		cond_.compile(compiler.getExpressionCompiler());
-		Instruction ins = compiler.branchTrue();
-		int end = compiler.nextPosition();
-		ins.setOperand(start);
+		
+		// condition
+		cond_.compile(compiler);
+		
+		// if condition is true, jump to start
+		Blank jumpToStart = compiler.branchTrue();
+		
+		int end = compiler.position();
+		jumpToStart.fill(start);
 		super.fillBreak(end);
+		super.fillContinue(start);
 	}
 
 }

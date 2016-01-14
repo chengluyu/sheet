@@ -1,6 +1,6 @@
 package ast;
 
-import compiler.StatementCompiler;
+import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
 public class ContinueStatement extends Statement {
@@ -17,8 +17,8 @@ public class ContinueStatement extends Statement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		compiler.branch(target_.startPosition());
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		target_.addContinue(compiler.branch());
 	}
 	
 }

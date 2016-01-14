@@ -1,8 +1,7 @@
 package ast;
 
-import compiler.ExpressionCompiler;
-import compiler.Instruction;
-import compiler.StatementCompiler;
+import compiler.ByteCodeCompiler;
+import compiler.Blank;
 import utils.CompileError;
 
 public class IfStatement extends Statement {
@@ -28,16 +27,17 @@ public class IfStatement extends Statement {
 	}
 
 	@Override
-	public void compile(StatementCompiler compiler) throws CompileError {
-		ExpressionCompiler ec = compiler.getExpressionCompiler();
-		cond_.compile(ec);
-		Instruction ins = compiler.branchFalse();
+	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		cond_.compile(compiler);
+		Blank jumpToElse = compiler.branchFalse();
 		then_.compile(compiler);
-		ins.setOperand(compiler.nextPosition());
-		if (else_ != null) {
-			Instruction toEnd = compiler.branch();
+		if (else_ == null) {
+			jumpToElse.fill(compiler.position());
+		} else {
+			Blank jumpToEnd = compiler.branch();
+			jumpToElse.fill(compiler.position());
 			else_.compile(compiler);
-			toEnd.setOperand(compiler.nextPosition());
+			jumpToEnd.fill(compiler.position());
 		}
 	}
 

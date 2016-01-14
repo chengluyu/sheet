@@ -3,26 +3,29 @@ package runtime;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import compiler.CodeSegment;
+import compiler.ByteCode;
 import compiler.Instruction;
 
 public class FunctionInfo {
 
 	public FunctionInfo(
+			int id,
 			String name,
 			FieldInfo[] arguments,
 			FieldInfo[] locals,
-			CodeSegment code) {
+			ByteCode code) {
+		id_ = id;
 		name_ = name;
 		arguments_ = arguments;
 		locals_ = locals;
 		byteCode_ = code;
 	}
 	
+	private int id_;
 	private String name_;
 	private FieldInfo[] arguments_;
 	private FieldInfo[] locals_;
-	private CodeSegment byteCode_;
+	private ByteCode byteCode_;
 	
 	public int argumentCount() {
 		return arguments_.length;

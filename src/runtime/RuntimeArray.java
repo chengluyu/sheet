@@ -1,7 +1,6 @@
 package runtime;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 
 public class RuntimeArray extends RuntimeObject {
@@ -10,7 +9,7 @@ public class RuntimeArray extends RuntimeObject {
 		elems_ = null;
 	}
 	
-	public RuntimeArray(Collection<RuntimeObject> elems) {
+	public RuntimeArray(ArrayList<RuntimeObject> elems) {
 		elems_ = new ArrayList<RuntimeObject>();
 		elems_.addAll(elems);
 	}
