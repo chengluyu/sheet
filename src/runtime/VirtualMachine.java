@@ -92,19 +92,7 @@ public class VirtualMachine {
 				break;
 			case BR:
 				break;
-			case BREQ:
-				break;
 			case BRFALSE:
-				break;
-			case BRGT:
-				break;
-			case BRGTE:
-				break;
-			case BRLT:
-				break;
-			case BRLTE:
-				break;
-			case BRNE:
 				break;
 			case BRTRUE:
 				break;

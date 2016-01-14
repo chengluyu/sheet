@@ -67,6 +67,10 @@ public class ExpressionCompiler extends Compiler {
 		return emit(OpCode.BRFALSE);
 	}
 	
+	public void pop() {
+		emit(OpCode.POP);
+	}
+	
 	private static final HashMap<Tag, OpCode> correspond_ =
 			new HashMap<Tag, OpCode>();
 	

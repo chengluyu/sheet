@@ -29,7 +29,11 @@ public class ExpressionGroup extends Expression {
 
 	@Override
 	public void compile(ExpressionCompiler compiler) throws CompileError {
-		throw new CompileError("try to compile expression group");
+		for (int i = 0; i < exprs_.size() - 1; i++) {
+			exprs_.get(i);
+			compiler.pop();
+		}
+		exprs_.get(exprs_.size() - 1).compile(compiler);
 	}
 	
 }

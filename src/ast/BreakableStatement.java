@@ -6,7 +6,7 @@ import compiler.Instruction;
 public abstract class BreakableStatement extends Statement {
 
 	public BreakableStatement() {
-		
+		break_ = new FillBack();
 	}
 	
 	private FillBack break_;

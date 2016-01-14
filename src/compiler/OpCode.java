@@ -25,30 +25,38 @@ public enum OpCode {
 	NOT,
 	BIT_NOT,
 	// Branch (with one operand)
-	BR,
-	BRTRUE,
-	BRFALSE,
-	BREQ,
-	BRNE,
-	BRLT,
-	BRGT,
-	BRLTE,
-	BRGTE,
+	BR(true),
+	BRTRUE(true),
+	BRFALSE(true),
 	// Control flow
-	CALL,
+	CALL(true),
 	RET,
 	// Load
-	LDARG,
+	LDARG(true),
 	LDELEM,
-	LDGLOB,
-	LDLOC,
-	LDSTATIC,
+	LDGLOB(true),
+	LDLOC(true),
+	LDSTATIC(true),
 	LDNULL,
 	// Store
-	STARG,
-	STGLOB,
-	STLOC,
+	STARG(true),
+	STGLOB(true),
+	STLOC(true),
 	STELEM,
 	// Stack control
-	POP
+	POP;
+	
+	private OpCode() {
+		this(false);
+	}
+	
+	private OpCode(boolean hasOperand) {
+		hasOperand_ = hasOperand;
+	}
+	
+	private boolean hasOperand_;
+
+	public boolean hasOperand() {
+		return hasOperand_;
+	}
 }

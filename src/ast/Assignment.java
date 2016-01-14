@@ -46,8 +46,9 @@ public class Assignment extends Expression {
 			} else if (symb.isGlobal()) {
 				compiler.storeGlobal(symb.id());
 			}
+		} else {
+			throw new CompileError("unreachable");
 		}
-		throw new CompileError("unreachable");
 	}
 	
 }

@@ -25,5 +25,12 @@ public class Instruction {
 	public void setOperand(int i) {
 		operand_ = i;
 	}
+	
+	@Override
+	public String toString() {
+		if (opCode_.hasOperand())
+			return opCode_.name() + ' ' + Integer.toString(operand_);
+		return opCode_.name();
+	}
 
 }

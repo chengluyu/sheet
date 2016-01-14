@@ -58,9 +58,13 @@ public class SymbolReference extends Literal {
 	
 	@Override
 	public void inspect(AstNodePrinter printer) {
-		printer.beginBlock("symbol reference");
-		printer.property("name", refSymbol_.name());
-		printer.endBlock();
+		if (resolved()) {
+			printer.beginBlock("symbol reference");
+			printer.property("name", refSymbol_.name());
+			printer.endBlock();
+		} else {
+			
+		}
 	}
 
 	@Override

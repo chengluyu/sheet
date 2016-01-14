@@ -17,5 +17,9 @@ public class FieldInfo {
 	public String name() {
 		return name_;
 	}
+	
+	public String inspect() {
+		return String.format("%d: %s", id_, name_);
+	}
 
 }

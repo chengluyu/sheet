@@ -34,7 +34,11 @@ public class IfStatement extends Statement {
 		Instruction ins = compiler.branchFalse();
 		then_.compile(compiler);
 		ins.setOperand(compiler.nextPosition());
-		else_.compile(compiler);
+		if (else_ != null) {
+			Instruction toEnd = compiler.branch();
+			else_.compile(compiler);
+			toEnd.setOperand(compiler.nextPosition());
+		}
 	}
 
 }
