@@ -112,44 +112,37 @@ public class RuntimeNull extends RuntimeObject {
 
 	@Override
 	public RuntimeObject and(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform and on null value");
 	}
 
 	@Override
 	public RuntimeObject or(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform or on null value");
 	}
 
 	@Override
 	public RuntimeObject xor(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform xor on null value");
 	}
 
 	@Override
 	public RuntimeObject negative() throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform negative on null value");
 	}
 
 	@Override
 	public RuntimeObject not() throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform not on null value");
 	}
 
 	@Override
 	public RuntimeObject increase() throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform increase on null value");
 	}
 
 	@Override
 	public RuntimeObject decrease() throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeError("cannot perform decrease on null value");
 	}
 
 }
