@@ -39,6 +39,10 @@ public class FunctionInfo {
 		return byteCode_.iterator();
 	}
 	
+	public ByteCode byteCode() {
+		return byteCode_;
+	}
+	
 	public String inspect() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("function " + name_ + ":\n");

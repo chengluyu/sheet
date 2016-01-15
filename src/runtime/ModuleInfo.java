@@ -37,6 +37,10 @@ public class ModuleInfo {
 		return prologue_;
 	}
 	
+	public StaticPool staticPool() {
+		return staticPool_;
+	}
+	
 	public FunctionInfo getFunctionByIndex(int i) {
 		return functions_[i];
 	}

@@ -1,6 +1,8 @@
-package runtime;
+package vm;
 
 import java.util.Stack;
+
+import runtime.RuntimeObject;
 
 public class StackFrame {
 	
@@ -42,6 +44,10 @@ public class StackFrame {
 	
 	public StackFrame previous() {
 		return previous_;
+	}
+
+	public RuntimeObject top() {
+		return stack_.peek();
 	}
 
 }

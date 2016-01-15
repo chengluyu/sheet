@@ -10,7 +10,7 @@ public class FunctionSymbol extends Symbol {
 	
 	@Override
 	public boolean isFunction() {
-		return false;
+		return true;
 	}
 
 }

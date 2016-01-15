@@ -14,5 +14,13 @@ public class ByteCode {
 	public Iterator<Instruction> iterator() {
 		return byteCodes_.iterator();
 	}
+	
+	public Instruction fetch(int i) {
+		return byteCodes_.get(i);
+	}
+	
+	public int instructionCount() {
+		return byteCodes_.size();
+	}
 
 }
