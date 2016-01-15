@@ -22,20 +22,17 @@ public class RuntimeCharacter extends RuntimeObject {
 
 	@Override
 	public boolean isFalsy() {
-		// TODO Auto-generated method stub
 		return value_ == '\0';
 	}
 
 	@Override
 	public RuntimeObject copy() {
-		// TODO Auto-generated method stub
-		return null;
+		return new RuntimeCharacter(value_);
 	}
 
 	@Override
 	public RuntimeObjectType getType() {
-		// TODO Auto-generated method stub
-		return null;
+		return RuntimeObjectType.CHARACTER;
 	}
 
 	@Override
@@ -46,32 +43,30 @@ public class RuntimeCharacter extends RuntimeObject {
 
 	@Override
 	public boolean equals(RuntimeObject rhs) {
-		// TODO Auto-generated method stub
+		if (rhs instanceof RuntimeCharacter) {
+			return value_ == ((RuntimeCharacter) rhs).value_;
+		}
 		return false;
 	}
 
 	@Override
 	public boolean lessThan(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return false;
+		throw new RuntimeError("cannot perform comparision on null value");
 	}
 
 	@Override
 	public boolean greatThan(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return false;
+		throw new RuntimeError("cannot perform comparision on null value");
 	}
 
 	@Override
 	public boolean lessThanOrEqual(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return false;
+		throw new RuntimeError("cannot perform comparision on null value");
 	}
 
 	@Override
 	public boolean greatThanOrEqual(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return false;
+		throw new RuntimeError("cannot perform comparision on null value");
 	}
 
 	@Override
@@ -116,17 +111,17 @@ public class RuntimeCharacter extends RuntimeObject {
 
 	@Override
 	public RuntimeObject and(RuntimeObject rhs) throws RuntimeError {
-		throw new RuntimeError("cannot perform and on null value");
+		return new RuntimeBoolean(isTruly() && rhs.isTruly());
 	}
 
 	@Override
 	public RuntimeObject or(RuntimeObject rhs) throws RuntimeError {
-		throw new RuntimeError("cannot perform or on null value");
+		return new RuntimeBoolean(isTruly() || rhs.isTruly());
 	}
 
 	@Override
 	public RuntimeObject xor(RuntimeObject rhs) throws RuntimeError {
-		throw new RuntimeError("cannot perform xor on null value");
+		return new RuntimeBoolean(isTruly() ^ rhs.isTruly());
 	}
 
 	@Override

@@ -117,20 +117,17 @@ public class RuntimeBoolean extends RuntimeObject {
 
 	@Override
 	public RuntimeObject and(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		return new RuntimeBoolean(value_ && rhs.isTruly());
 	}
 
 	@Override
 	public RuntimeObject or(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		return new RuntimeBoolean(value_ || rhs.isTruly());
 	}
 
 	@Override
 	public RuntimeObject xor(RuntimeObject rhs) throws RuntimeError {
-		// TODO Auto-generated method stub
-		return null;
+		return new RuntimeBoolean(value_ ^ rhs.isTruly());
 	}
 
 	@Override

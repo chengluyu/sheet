@@ -112,17 +112,17 @@ public class RuntimeNull extends RuntimeObject {
 
 	@Override
 	public RuntimeObject and(RuntimeObject rhs) throws RuntimeError {
-		throw new RuntimeError("cannot perform and on null value");
+		return new RuntimeBoolean(isTruly() && rhs.isTruly());
 	}
 
 	@Override
 	public RuntimeObject or(RuntimeObject rhs) throws RuntimeError {
-		throw new RuntimeError("cannot perform or on null value");
+		return new RuntimeBoolean(isTruly() || rhs.isTruly());
 	}
 
 	@Override
 	public RuntimeObject xor(RuntimeObject rhs) throws RuntimeError {
-		throw new RuntimeError("cannot perform xor on null value");
+		return new RuntimeBoolean(isTruly() ^ rhs.isTruly());
 	}
 
 	@Override
