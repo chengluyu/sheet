@@ -144,4 +144,9 @@ public class RuntimeCharacter extends RuntimeObject {
 		throw new RuntimeError("cannot perform decrease on null value");
 	}
 
+	@Override
+	public String toString() {
+		return "" + value_;
+	}
+
 }

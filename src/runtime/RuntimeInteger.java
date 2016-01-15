@@ -270,4 +270,9 @@ public class RuntimeInteger extends RuntimeObject {
 		return new RuntimeInteger(value_ - 1);
 	}
 
+	@Override
+	public String toString() {
+		return Integer.toString(value_);
+	}
+
 }

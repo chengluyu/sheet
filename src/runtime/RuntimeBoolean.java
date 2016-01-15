@@ -22,12 +22,12 @@ public class RuntimeBoolean extends RuntimeObject {
 
 	@Override
 	public boolean isTruly() {
-		return value_;
+		return value_ == true;
 	}
 
 	@Override
 	public boolean isFalsy() {
-		return value_;
+		return value_ == false;
 	}
 
 	@Override

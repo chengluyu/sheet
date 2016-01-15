@@ -1,7 +1,33 @@
 
 function factorial(n) {
-	if (n == 0) return 0;
+	if (n == 0) return 1;
 	return n * factorial(n - 1);
+}
+
+function abs(x) {
+	return x < 0 ? -x : x;
+}
+
+function sum(a, n) {
+	let s = 0;
+	for (let i = 0; i < n; i++) {
+		s += a[i];
+	}
+	return s;
+}
+
+function maxElements(a, n) {
+	if (n == 0) return;
+
+	let m = a[0];
+	for (let i = 1; i < n; i++) {
+		if (a[i] > m) m = a[i];
+	}
+	return m;
+}
+
+function main() {
+	return maxElements([1,2,5,4], 4);
 }
 
 /*

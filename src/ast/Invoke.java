@@ -1,6 +1,9 @@
 package ast;
 
 import parser.symbol.Symbol;
+
+import java.util.Iterator;
+
 import compiler.ByteCodeCompiler;
 import utils.CompileError;
 
@@ -24,6 +27,10 @@ public class Invoke extends Expression {
 
 	@Override
 	public void compile(ByteCodeCompiler compiler) throws CompileError {
+		Iterator<? extends Expression> it = args_.expressions().iterator();
+		while (it.hasNext()) {
+			it.next().compile(compiler);
+		}
 		if (!(func_ instanceof SymbolReference))
 			throw new CompileError("callee expression must be a function");
 		SymbolReference ref = (SymbolReference) func_;

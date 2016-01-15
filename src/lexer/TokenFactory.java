@@ -47,9 +47,12 @@ public class TokenFactory {
 	}
 
 	static {
-		for (Tag tag : Tag.values())
-			if (tag.type() == TokenType.KEYWORD)
+		for (Tag tag : Tag.values()) {
+			if (tag.type() == TokenType.KEYWORD) {
 				keywordMap_.put(tag.literal(), tag);
+//				System.out.println("put " + tag.name() + ' ' + tag.literal());
+			}
+		}
 	}
 
 }

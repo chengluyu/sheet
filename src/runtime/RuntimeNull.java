@@ -144,5 +144,10 @@ public class RuntimeNull extends RuntimeObject {
 	public RuntimeObject decrease() throws RuntimeError {
 		throw new RuntimeError("cannot perform decrease on null value");
 	}
+	
+	@Override
+	public String toString() {
+		return "null";
+	}
 
 }

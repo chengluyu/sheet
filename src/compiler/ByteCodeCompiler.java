@@ -105,7 +105,7 @@ public class ByteCodeCompiler {
 
 	public void addEpilogueRet() {
 		Instruction last = codes_.get(codes_.size() - 1);
-		if (last.opcode() != OpCode.RET || last.opcode() != OpCode.RETNULL)
+		if (last.opcode() != OpCode.RET && last.opcode() != OpCode.RETNULL)
 			codes_.add(new Instruction(OpCode.RETNULL));
 	}
 

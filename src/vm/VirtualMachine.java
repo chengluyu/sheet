@@ -42,6 +42,7 @@ public class VirtualMachine {
 			// TODO raise error here
 		} else {
 			invoke(entry, null);
+			System.out.println(frame_.pop().toString());
 		}
 	}
 	
@@ -63,7 +64,8 @@ public class VirtualMachine {
 			throws RuntimeError {
 		enter(fn.localCount(), args);
 		RuntimeObject ret = execute(fn.byteCode());
-		assert ret == null;
+		if (ret == null)
+			throw new Error("(internal error) invoke returns null");
 		leave();
 		frame_.push(ret);
 	}
@@ -88,7 +90,6 @@ public class VirtualMachine {
 		RuntimeObject returnObj = null;
 		RuntimeObject lhs, rhs;
 		RuntimeObject value, index;
-		RuntimeArray array;
 		ExecuteLoop: while (cursor < byteCode.instructionCount()) {
 			Instruction ins = byteCode.fetch(cursor);
 			switch (ins.opcode()) {
@@ -103,15 +104,15 @@ public class VirtualMachine {
 				stack.push(lhs.and(rhs));
 				break;
 			case BR:
-				cursor = ins.operand();
+				cursor = ins.operand() - 1;
 				break;
 			case BRFALSE:
-				if (stack.pop().isTruly())
-					cursor = ins.operand();
+				if (stack.pop().isFalsy())
+					cursor = ins.operand() - 1;
 				break;
 			case BRTRUE:
-				if (stack.pop().isFalsy())
-					cursor = ins.operand();
+				if (stack.pop().isTruly())
+					cursor = ins.operand() - 1;
 				break;
 			case CALL: {
 				FunctionInfo fn = module_.getFunctionByIndex(ins.operand());
@@ -152,6 +153,14 @@ public class VirtualMachine {
 				stack.push(staticPool_.get(ins.operand()));
 				break;
 			case LDELEM:
+				index = stack.pop();
+				value = stack.pop();
+				if (value instanceof RuntimeArray) {
+					stack.push(((RuntimeArray) value).get(index));
+				} else {
+					throw new RuntimeError(
+							"the left-side hand of index must be an array");
+				}
 				break;
 			case LT:
 				rhs = stack.pop();
@@ -186,7 +195,7 @@ public class VirtualMachine {
 				stack.push(lhs.or(rhs));
 				break;
 			case POP:
-				stack.pop();
+				stack.popIfHas();
 				break;
 			case RET:
 				returnObj = stack.pop();
@@ -224,8 +233,12 @@ public class VirtualMachine {
 				index = stack.pop();
 				value = stack.pop();
 				rhs = stack.pop();
-				index.requireType(RuntimeObjectType.INTEGER);
-				value.requireType(RuntimeObjectType.ARRAY);
+				if (value instanceof RuntimeArray) {
+					((RuntimeArray) value).set(index, value);
+				} else {
+					throw new RuntimeError(
+							"the left-side hand of index must be an array");
+				}
 				break;
 			case SUB:
 				rhs = stack.pop();
@@ -266,6 +279,7 @@ public class VirtualMachine {
 			default:
 				break;
 			}
+			cursor++;
 		}
 		return returnObj;
 	}

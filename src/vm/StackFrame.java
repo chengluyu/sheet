@@ -30,6 +30,11 @@ public class StackFrame {
 		return stack_.pop();
 	}
 	
+	public void popIfHas() {
+		if (!stack_.isEmpty())
+			stack_.pop();
+	}
+	
 	public boolean empty() {
 		return stack_.isEmpty();
 	}

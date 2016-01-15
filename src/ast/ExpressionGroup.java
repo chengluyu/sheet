@@ -1,7 +1,6 @@
 package ast;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 
 import compiler.ByteCodeCompiler;
@@ -25,7 +24,7 @@ public class ExpressionGroup extends Expression {
 		printer.endBlock();
 	}
 	
-	public Collection<? extends Expression> expressions() {
+	public ArrayList<? extends Expression> expressions() {
 		return exprs_;
 	}
 

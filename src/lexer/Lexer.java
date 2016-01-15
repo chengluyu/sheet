@@ -444,6 +444,10 @@ public class Lexer {
 
 	private Token scanIdentifierOrKeyword(char firstChar) {
 		String id = scanIdentifier(firstChar);
+//		System.out.println(TokenFactory.isKeyword("true"));
+//		System.out.println(TokenFactory.isKeyword(id.toString()));
+//		System.out.println("id: \"" + id + '"');
+//		System.out.println("id == \"true\":" + (id.equals("true")));
 		return TokenFactory.isKeyword(id) ?
 				tokenFactory_.keyword(id) : tokenFactory_.identifier(id);
 	}

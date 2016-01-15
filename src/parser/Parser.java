@@ -466,7 +466,7 @@ public class Parser {
 		if (!match(Tag.SEMICOLON)) {
 			retExpr = parseExpression();
 		}
-		expectSemicolon();
+		match(Tag.SEMICOLON);
 		return astNodeFactory_.newReturnStatement(retExpr);
 	}
 
@@ -648,7 +648,7 @@ public class Parser {
 			eg = new ExpressionGroup(new ArrayList<Expression>());
 		} else {
 			Expression first = parseExpression();
-			if (match(Tag.COMMA)) {
+			if (peek.tag() == Tag.COMMA) {
 				eg = parseExpressionGroup(first);
 			} else {
 				ArrayList<Expression> lst = new ArrayList<Expression>();
@@ -694,11 +694,10 @@ public class Parser {
 	private ExpressionGroup parseExpressionGroup(Expression first)
 			throws LexicalError, SyntaxError {
 		ArrayList<Expression> group = new ArrayList<Expression>();
-		Token comma = expect(Tag.COMMA);
 		
 		group.add(first);
 		while (match(Tag.COMMA)) {
-			group.add(parseExpression(comma.lbp()));
+			group.add(parseExpression(Tag.COMMA.lbp()));
 		}
 		return astNodeFactory_.newExpressionGroup(group);
 	}
